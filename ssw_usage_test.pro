@@ -17,3 +17,5 @@ tv, bytscl(image, min=0, max=500)  ; Scale image intensity
 
 ; Display the header information
 print, header
+
+;ssw or SSW? use idl89?
