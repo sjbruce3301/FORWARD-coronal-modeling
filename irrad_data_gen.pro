@@ -13,4 +13,5 @@ irtotnl(1, *) = irradiance   ; Second row
 save, irtotnl, filename='/Users/sbruce/Documents/GitHub/FORWARD-coronal-modeling/synthetic_irradiance_idl.sav'
 
 print, 'Synthetic .sav file created successfully.'
+;print, irradiance
 end

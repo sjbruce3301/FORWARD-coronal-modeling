@@ -3,7 +3,7 @@
 ;
 ;	does integration to determine intensity of K-corona
 
-pro cram_sim,lamdaobs,rho,te
+function cram_sim,lamdaobs,rho,te
 
 lamdaobs = 8000		;observed wavelength 
 rho = 1.5			;observed radial distance (limb = 1)
@@ -34,8 +34,6 @@ xdep = fltarr(3,41)
 
 ;	****  Set Wavelength Scale  ****
 
-;restore,'irradiance.2.sav'	;load solar irradiance data, 3300-8475 A
-;restore,'irradiance.neck.lab.sav'	;load solar irradiance data, 3300-12500 A. first row contains wavelength scale, second contains solar irrad.
 
 restore,'/Users/sbruce/Documents/GitHub/FORWARD-coronal-modeling/synthetic_irradiance_idl.sav' ;load irradiance tester file (generated from python script)
 irtot = irtotnl
@@ -199,7 +197,7 @@ xdep(0:1,*) = xdep(0:1,*)*phistep*2*factoredout
 print,'Ir'+string(intot)+'     It'+string(intor)
 print,'Polarization Percentage - '+string(polp)
 
-;return,[intot,intor]
-;return,xdep
-print,xdep
+return,intot;,intor,polp
+;return,[intot,intor], xdep
+;print,'xdep:'+string(xdep)
 end
