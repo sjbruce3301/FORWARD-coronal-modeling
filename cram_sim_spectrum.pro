@@ -6,7 +6,14 @@ pro cram_sim_spectrum, lamdaobs_range, rho, te
 
   ; Example wavelength range
   ;lamdaobs_range = [7800, 8000, 8200]
-  
+ 
+  ; Define the desired wavelength range
+  lambda_min = 3800.0   ; Minimum wavelength in Angstroms
+  lambda_max = 8000.0   ; Maximum wavelength in Angstroms
+  num_points = 10     ; Number of points
+
+  ; Create the lamdaobs_range array
+  lamdaobs_range = lambda_min + (lambda_max - lambda_min) * findgen(num_points) / (num_points - 1)
   ; Array to store results
   spectrum = fltarr(n_elements(lamdaobs_range), 2) ; Assuming 3 columns for intot, intor, polp
   
@@ -20,14 +27,19 @@ pro cram_sim_spectrum, lamdaobs_range, rho, te
     intot = result[0]
 ;    intor = result[1]
 ;    polp = result[2]
-    print,intot
+    ;print,intot
     ; Store results in spectrum array
-    print,i
+    ;print,i
     spectrum[i, 0] = lamdaobs_range[i]
     spectrum[i,1] = intot
   endfor
   
   ; Print or process spectrum data
-  print, 'Wavelength (Angstrom)   Intensity   Radial Intensity   Polarization'
+  ;print, 'Wavelength (Angstrom)   Intensity   Radial Intensity   Polarization'
   print, spectrum
+  
+  p=PLOT(spectrum[*, 0], spectrum[*, 1], $
+     linestyle=0, color=0, $
+     title='Spectrum Plot', $
+     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity')
 end

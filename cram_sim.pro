@@ -5,9 +5,9 @@
 
 function cram_sim,lamdaobs,rho,te
 
-lamdaobs = 8000		;observed wavelength 
-rho = 1.5			;observed radial distance (limb = 1)
-te = 1				;electron temperature
+;lamdaobs = 8000		;observed wavelength 
+;rho = 1.5			;observed radial distance (limb = 1)
+;te = 1				;electron temperature
 
 ; 	****  Constant Definition  ****
 
@@ -194,8 +194,8 @@ intot = intte*phistep*2*factoredout
 intor = intre*phistep*2*factoredout
 polp = (intot-intor)/(intot+intor)
 xdep(0:1,*) = xdep(0:1,*)*phistep*2*factoredout
-print,'Ir'+string(intot)+'     It'+string(intor)
-print,'Polarization Percentage - '+string(polp)
+;print,'Ir'+string(intot)+'     It'+string(intor)
+;print,'Polarization Percentage - '+string(polp)
 
 return,intot;,intor,polp
 ;return,[intot,intor], xdep
