@@ -15,7 +15,7 @@ pro cram_sim_spectrum, lamdaobs_range, rho, te
   ; Create the lamdaobs_range array
   lamdaobs_range = lambda_min + (lambda_max - lambda_min) * findgen(num_points) / (num_points - 1)
   ; Array to store results
-  spectrum = fltarr(n_elements(lamdaobs_range), 2) ; Assuming 3 columns for intot, intor, polp
+  spectrum = fltarr(n_elements(lamdaobs_range), 2) ; Assuming 2 columns for wavelength and intensity
   
   ; Loop over each wavelength
   for i = 0, (n_elements(lamdaobs_range) - 1) do begin
