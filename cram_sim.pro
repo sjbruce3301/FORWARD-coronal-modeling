@@ -3,7 +3,7 @@
 ;
 ;	does integration to determine intensity of K-corona
 
-function cram_sim,lamdaobs,rho,te
+pro cram_sim,lamdaobs,rho,te
 
 lamdaobs = 8000		;observed wavelength 
 rho = 1.5			;observed radial distance (limb = 1)
@@ -198,5 +198,6 @@ print,'Ir'+string(intot)+'     It'+string(intor)
 print,'Polarization Percentage - '+string(polp)
 
 ;return,[intot,intor]
-return,xdep
+;return,xdep
+print,xdep
 end
