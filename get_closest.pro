@@ -1,8 +1,8 @@
-; Define the get_closest function
+; Define the get_closest function - find index of element in an array that is
+  ; closes to given value
 function get_closest, array, value
-  ; Find the index of the element in 'array' that is closest to 'value'
-  ; 'array' is a 1D array
-  ; 'value' is the target value to find the closest element to
+
+  ;array is provided array, value is the target value to get closest to
 
   ; Calculate the absolute differences between each element in the array and the value
   diffs = abs(array - value)

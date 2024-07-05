@@ -1,3 +1,6 @@
+;file to generate synthetic solar data (not accurate!) for the purpose of testing cram_sim
+   ;without a solar irradiance spectrum file
+
 pro irrad_data_gen
 
 ; Define the wavelength range and create synthetic data
