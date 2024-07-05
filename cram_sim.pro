@@ -35,10 +35,12 @@ xdep = fltarr(3,41)
 ;	****  Set Wavelength Scale  ****
 
 ;restore,'irradiance.2.sav'	;load solar irradiance data, 3300-8475 A
-restore,'irradiance.neck.lab.sav'	;load solar irradiance data, 3300-12500 A
+;restore,'irradiance.neck.lab.sav'	;load solar irradiance data, 3300-12500 A. first row contains wavelength scale, second contains solar irrad.
+
+restore,'/Users/sbruce/Documents/GitHub/FORWARD-coronal-modeling/synthetic_irradiance_idl.sav' ;load irradiance tester file (generated from python script)
 irtot = irtotnl
-lamdasrc = reform(irtot(0,*))	;wavelength scale of atlas
-izero = reform(irtot(1,*)) * irradtoflux	;convert to solar flux
+lamdasrc = reform(irtot(0,*))	;wavelength scale of atlas - take out only wavelength values into 1D array
+izero = reform(irtot(1,*)) * irradtoflux	;convert to solar flux - take out irrad values into 1D array and multiply by conversion factor.
 
 ;trim wavelength range down to +-4.0  velocity half-widths from observation wavelength
 ldif = lamdaobs*qp/c
