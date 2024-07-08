@@ -1,16 +1,19 @@
-pro cram_sim_spectrum, lamdaobs_range, rho, te
+pro for_cram_sim_spectrum, lambda_min, $ ;minimum wavelength
+  lambda_max, $ ;maximum wavelength
+  num_points, $ ;number of data points between max and min wavelengths
+  rho, te, $ ;radial distance from sun, electron temperature  
+  
   ; Initialize default parameters if not provided
-  if n_params() lt 3 then te = 1
-  if n_params() lt 2 then rho = 1.5
-  if n_params() lt 1 then lamdaobs_range = [7800, 8000, 8200] ; Example range in Angstroms
-
-  ; Example wavelength range
-  ;lamdaobs_range = [7800, 8000, 8200]
+  if n_params() lt 5 then te = 1
+  if n_params() lt 4 then rho = 1.5
+  if n_params() lt 3 then num_points = 20
+  if n_params() lt 2 then lambda_max = 4600
+  if n_params() lt 1 then lambda_min = 3500
  
   ; Define the desired wavelength range
-  lambda_min = 3000.0   ; Minimum wavelength in Angstroms
-  lambda_max = 10000.0   ; Maximum wavelength in Angstroms
-  num_points = 100     ; Number of points
+  ;lambda_min = 3550.0   ; Minimum wavelength in Angstroms
+  ;lambda_max = 4600.0   ; Maximum wavelength in Angstroms
+  ;num_points = 10     ; Number of points
 
   ; Create the lamdaobs_range array
   lamdaobs_range = lambda_min + (lambda_max - lambda_min) * findgen(num_points) / (num_points - 1)
@@ -36,11 +39,17 @@ pro cram_sim_spectrum, lamdaobs_range, rho, te
   
   ; Print or process spectrum data
   ;print, 'Wavelength (Angstrom)   Intensity   Radial Intensity   Polarization'
-  print, spectrum
-  
+  ;print, spectrum
+
   p=PLOT(spectrum[*, 0], spectrum[*, 1], $
      linestyle=0, color=0, $
-     title=TeXtoIDL('Intensity Spectrum, T_e = 1, \rho = 1.5'), $
+     title=TeXtoIDL('Intensity Spectrum, T_e = '+strn(te)+' ρ = '+strn(rho)), $
      xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
-     XRANGE = [3000,10000])
+     XRANGE = [3550,4600])
+     
+  mean_intensity = MEAN(spectrum[*, 1])
+  std_deviation = STDDEV(spectrum[*, 1])
+  print,std_deviation
+
+
 end
