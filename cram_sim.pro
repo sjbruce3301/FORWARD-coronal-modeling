@@ -35,7 +35,7 @@ xdep = fltarr(3,41)
 ;	****  Set Wavelength Scale  ****
 
 
-restore,'/Users/sbruce/Documents/GitHub/FORWARD-coronal-modeling/synthetic_irradiance_idl.sav' ;load irradiance tester file (generated from python script)
+restore,'/Users/sbruce/Documents/GitHub/FORWARD-coronal-modeling/irradiance_solar.sav' ;load irradiance tester file (generated from python script)
 irtot = irtotnl
 lamdasrc = reform(irtot(0,*))	;wavelength scale of atlas - take out only wavelength values into 1D array
 izero = reform(irtot(1,*)) * irradtoflux	;convert to solar flux - take out irrad values into 1D array and multiply by conversion factor.

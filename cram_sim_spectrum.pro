@@ -8,9 +8,9 @@ pro cram_sim_spectrum, lamdaobs_range, rho, te
   ;lamdaobs_range = [7800, 8000, 8200]
  
   ; Define the desired wavelength range
-  lambda_min = 3800.0   ; Minimum wavelength in Angstroms
-  lambda_max = 8000.0   ; Maximum wavelength in Angstroms
-  num_points = 10     ; Number of points
+  lambda_min = 3000.0   ; Minimum wavelength in Angstroms
+  lambda_max = 10000.0   ; Maximum wavelength in Angstroms
+  num_points = 100     ; Number of points
 
   ; Create the lamdaobs_range array
   lamdaobs_range = lambda_min + (lambda_max - lambda_min) * findgen(num_points) / (num_points - 1)
@@ -40,6 +40,7 @@ pro cram_sim_spectrum, lamdaobs_range, rho, te
   
   p=PLOT(spectrum[*, 0], spectrum[*, 1], $
      linestyle=0, color=0, $
-     title='Spectrum Plot', $
-     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity')
+     title=TeXtoIDL('Intensity Spectrum, T_e = 1, \rho = 1.5'), $
+     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
+     XRANGE = [3000,10000])
 end

@@ -1,5 +1,5 @@
 ; Define the get_closest function - find index of element in an array that is
-  ; closes to given value
+  ; closest to given value
 function get_closest, array, value
 
   ;array is provided array, value is the target value to get closest to
