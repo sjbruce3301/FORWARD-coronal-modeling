@@ -10,7 +10,8 @@ pro stdev_map_test
   for i = 0, (n_elements(temp_range) - 1) do begin
     ; Call cram_sim function
     ;print,lamdaobs_range[i]
-    t = cram_sim_spectrum(3500, 4600, 20,1.5, temp_range[i])
+    t = cram_sim_spectrum(3500, 4600, 20, 1.5, temp_range[i])
+    print,t
 
     ; Unpack results
     dev = t[0]

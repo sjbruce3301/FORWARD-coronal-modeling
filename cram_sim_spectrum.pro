@@ -1,14 +1,14 @@
-function cram_sim_spectrum, lambda_min, $ ;minimum wavelength
-  lambda_max, $ ;maximum wavelength
+function cram_sim_spectrum, l_min, $ ;minimum wavelength
+  l_max, $ ;maximum wavelength
   num_points, $ ;number of data points between max and min wavelengths
   rho, te, $ ;radial distance from sun, electron temperature  
   
   ; Initialize default parameters if not provided
-  if n_params() lt 5 then te = 1
-  if n_params() lt 4 then rho = 1.5
-  if n_params() lt 3 then num_points = 20
-  if n_params() lt 2 then lambda_max = 4600
-  if n_params() lt 1 then lambda_min = 3500
+  ;if n_params() lt 5 then te = 1
+  ;if n_params() lt 4 then rho = 1.5
+  ;if n_params() lt 3 then num_points = 20
+  ;if n_params() lt 2 then lambda_max = 4600
+  ;if n_params() lt 1 then lambda_min = 3500
  
   ; Define the desired wavelength range
   ;lambda_min = 3550.0   ; Minimum wavelength in Angstroms
@@ -16,7 +16,7 @@ function cram_sim_spectrum, lambda_min, $ ;minimum wavelength
   ;num_points = 10     ; Number of points
 
   ; Create the lamdaobs_range array
-  lamdaobs_range = lambda_min + (lambda_max - lambda_min) * findgen(num_points) / (num_points - 1)
+  lamdaobs_range = l_min + (l_max - l_min) * findgen(num_points) / (num_points - 1)
   ; Array to store results
   spectrum = fltarr(n_elements(lamdaobs_range), 2) ; Assuming 2 columns for wavelength and intensity
   
