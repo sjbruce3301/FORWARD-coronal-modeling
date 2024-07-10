@@ -1,4 +1,4 @@
-pro for_cram_sim_spectrum, lambda_min, $ ;minimum wavelength
+function cram_sim_spectrum, lambda_min, $ ;minimum wavelength
   lambda_max, $ ;maximum wavelength
   num_points, $ ;number of data points between max and min wavelengths
   rho, te, $ ;radial distance from sun, electron temperature  
@@ -47,9 +47,9 @@ pro for_cram_sim_spectrum, lambda_min, $ ;minimum wavelength
      xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
      XRANGE = [3550,4600])
      
-  mean_intensity = MEAN(spectrum[*, 1])
+  ;mean_intensity = MEAN(spectrum[*, 1])
   std_deviation = STDDEV(spectrum[*, 1])
-  print,std_deviation
+  return,std_deviation
 
 
 end
