@@ -1,7 +1,7 @@
 function cram_sim_spectrum, l_min, $ ;minimum wavelength
   l_max, $ ;maximum wavelength
   num_points, $ ;number of data points between max and min wavelengths
-  rho, te, $ ;radial distance from sun, electron temperature  
+  rho, te  ;radial distance from sun, electron temperature  
   
   ; Initialize default parameters if not provided
   ;if n_params() lt 5 then te = 1
