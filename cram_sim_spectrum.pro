@@ -1,7 +1,7 @@
 function cram_sim_spectrum, l_min, $ ;minimum wavelength
   l_max, $ ;maximum wavelength
   num_points, $ ;number of data points between max and min wavelengths
-  rho, te  ;radial distance from sun, electron temperature  
+  rho, te, LOS  ;radial distance from sun, electron temperature  
   
   ; Initialize default parameters if not provided
   ;if n_params() lt 5 then te = 1
@@ -24,7 +24,7 @@ function cram_sim_spectrum, l_min, $ ;minimum wavelength
   for i = 0, (n_elements(lamdaobs_range) - 1) do begin
     ; Call cram_sim function
     ;print,lamdaobs_range[i]
-    result = cram_sim(lamdaobs_range[i],rho,te)
+    result = cram_sim(lamdaobs_range[i],rho,te, LOS) ;add LOS
     
     ; Unpack results
     intot = result[0]
@@ -41,15 +41,15 @@ function cram_sim_spectrum, l_min, $ ;minimum wavelength
   ;print, 'Wavelength (Angstrom)   Intensity   Radial Intensity   Polarization'
   ;print, spectrum
 
-  p=PLOT(spectrum[*, 0], spectrum[*, 1], $
-     linestyle=0, color=0, $
-     title=TeXtoIDL('Intensity Spectrum, T_e = '+strn(te)+' ρ = '+strn(rho)), $
-     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
-     XRANGE = [3550,4600])
+  ;p=PLOT(spectrum[*, 0], spectrum[*, 1], $
+  ;   linestyle=0, color=0, $
+  ;   title=TeXtoIDL('Intensity Spectrum, T_e = '+strn(te)+' ρ = '+strn(rho)), $
+  ;   xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
+  ;   XRANGE = [3550,4600])
      
   ;mean_intensity = MEAN(spectrum[*, 1])
-  std_deviation = STDDEV(spectrum[*, 1])
-  return,std_deviation
+
+  return,spectrum
 
 
 end

@@ -3,7 +3,7 @@
 ;
 ;	does integration to determine intensity of K-corona
 
-function cram_sim,lamdaobs,rho,te
+function cram_sim,lamdaobs,rho,te,LOS_int_absvalue
 
 ;lamdaobs = 8000		;observed wavelength 
 ;rho = 1.5			;observed radial distance (limb = 1)
@@ -78,8 +78,8 @@ foi = 1-u2rc/3.-v2rc/2.
 
 ;	****  define some variables in integration  ****
 
-minx = -7.0			;maximum distance along line of sight
-maxx = 7.0			;minimum distance along line of sight
+minx = -LOS_int_absvalue		;min distance along line of sight , normal -7 to 7
+maxx = LOS_int_absvalue		;max distance along line of sight
 xstep = 0.5			;step size along line of sight
 maxr = fix(sqrt(maxx^2 + rho^2))
 xs = findgen(maxr*20+1.)/20. + 1.003
@@ -107,6 +107,7 @@ intre = 0. & intte = 0.		;reset x-integration variable
 ;*************  Integration along Line of Sight (x) *******************
 for x = minx,maxx,xstep do begin
 ;print,x
+;print,minx,maxx
 
 r = sqrt(x^2 + rho^2)			;distance from center of sun
 ;elecden = 1.67 * 10^(4+4.04/r)		;electron density at x (cm^-3)
@@ -172,6 +173,7 @@ omegold = asin(1./r)
 
         intr = intr + qrad*intint		;radially polarized intensity
         intt = intt + qtan*intint		;tangentially pol. intensity
+        
 
         ;********  End of phi (phi) integration  *********
         endfor
