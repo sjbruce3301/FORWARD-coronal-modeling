@@ -2,17 +2,17 @@ pro stdev_map_test
 
   temp_min = 0.1
   temp_max = 3
-  temp_points = 3
+  temp_points = 4
   
   temp_range = temp_min + (temp_max - temp_min) * findgen(temp_points) / (temp_points - 1)
   dev_array = fltarr(n_elements(temp_range), 2)
   
-  LOS_int=7
+  LOS_int=0.5
   
   for i = 0, (n_elements(temp_range) - 1) do begin
     ; Call cram_sim function
     ;print,lamdaobs_range[i]
-    spectrum = cram_sim_spectrum(3500, 4600, 6, 1.5, temp_range[i])
+    spectrum = cram_sim_spectrum(3500, 4600, 70, 1.5, temp_range[i], LOS_int)
     wavelengths = spectrum[*,0]
     spec_intensity = spectrum[*,1]
     ;print,t
@@ -28,11 +28,11 @@ pro stdev_map_test
     dev_array[i,1] = std_dev
     
     
-    ;spec_plot=PLOT(wavelengths, spec_intensity, $
-    ;     linestyle=0, color=0, $
-    ;     title=TeXtoIDL('Intensity Spectrum, T_e = '+strn(temp_range[i])), $
-    ;     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
-    ;     XRANGE = [3550,4600])
+    spec_plot=PLOT(wavelengths, spec_intensity, $
+         linestyle=0, color=0, $
+         title=TeXtoIDL('Intensity Spectrum, T_e = '+strn(temp_range[i])), $
+         xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', $
+         XRANGE = [3550,4600])
   endfor
   
   
