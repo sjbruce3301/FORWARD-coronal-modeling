@@ -3,65 +3,64 @@ pro compare_LOS_effects
   ;~~~~~~~~~~~~~~~~~~~~~~COMPARE SHORT VS LONG LOS INTEGRATION~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
   ;LOS_int_absvalue = 0.5
+  
 
-  spectrum = cram_sim_spectrum(3500, 4600, 1500, 1.5, 0.4, 5.0)
+  spectrum = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 0.1)
   wavelengths = spectrum[*,0]
   spec_intensity = spectrum[*,1]
+  spec_p = PLOT(wavelengths, spec_intensity, title=TeXtoIDL('Integrated Intensity Spectra at 0.5MK'), $
+    xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', 'b', NAME=TeXtoIDL('LOS Int. = 0.1R☉'))
+    
 
-  spec_p = PLOT(wavelengths, spec_intensity, title=TeXtoIDL('Integrated Intensity Spectra by Electron Temperature'), $
-    xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', color=[20, 13, 214], NAME=TeXtoIDL('T_e = 0.41MK'), $
-    XRANGE = [3500,4600])
-  ;COLOR=i+1 ;/YNOZERO
-
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 0.7, 5.0)
+  spectrum2 = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 0.5)
   wavelengths = spectrum2[*,0]
   spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[22, 192, 222], NAME=TeXtoIDL('T_e = 0.7MK'));, COLOR=i+1
-
-  ;LOS_int_absvalue = 7
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 1.0, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[22, 222, 65], NAME=TeXtoIDL('T_e = 1.0MK'));, COLOR=i+1
+  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, 'r', NAME=TeXtoIDL('LOS Int. = 0.5R☉'))
   
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 1.3, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[131, 245, 24], NAME=TeXtoIDL('T_e = 1.3MK'));, COLOR=i+1
+  spectrum3 = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 2.0)
+  wavelengths = spectrum3[*,0]
+  spec_intensity3 = spectrum3[*,1]
+  spec_p3= PLOT(/overplot, wavelengths, spec_intensity3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 2.0R☉'))
   
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 1.7, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[232, 229, 67], NAME=TeXtoIDL('T_e = 1.7MK'));, COLOR=i+1
-  
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 2.0, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[232, 166, 67], NAME=TeXtoIDL('T_e = 2.0MK'));, COLOR=i+1
-  
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 2.3, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[245, 139, 122], NAME=TeXtoIDL('T_e = 2.3MK'));, COLOR=i+1
-  
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 2.7, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[242, 5, 5], NAME=TeXtoIDL('T_e = 2.7MK'));, COLOR=i+1
-  
-  spectrum2 = cram_sim_spectrum(3500, 4600, 600, 1.5, 3.0, 5.0)
-  wavelengths = spectrum2[*,0]
-  spec_intensity2 = spectrum2[*,1]
-  spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, color=[245, 27, 136], NAME=TeXtoIDL('T_e = 3.0MK'));, COLOR=i+1
-
-  ; Add a legend for clarity
-  legendItems = ['T_e = 0.4MK', 'T_e = 0.3MK','T_e = 0.5MK', 'T_e = 0.9MK', 'T_e = 1.3MK','T_e = 1.7MK','T_e = 2.1MK','T_e = 2.5MK','T_e = 3.0MK']
-  legendColors = [1, 2, 3, 4, 5, 6, 7, 8]
+  spectrum4 = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 7.0)
+  wavelengths = spectrum4[*,0]
+  spec_intensity4 = spectrum4[*,1]
+  spec_p4= PLOT(/overplot, wavelengths, spec_intensity4, color=[245, 27, 136], NAME=TeXtoIDL('LOS Int. = 7.0R☉'))
 
   ; Create a legend object
-  l = legend(TARGET=[spec_p,spec_p2], POSITION=[3850,0.17], $
-
+  l = legend(TARGET=[spec_p,spec_p2, spec_p3, spec_p4], POSITION=[3900,0.17], $
     /DATA, /AUTO_TEXT_COLOR)
+    
+    
+  mapped1 = linear_mapping(spec_intensity, 0, 100)
+  ;print,mapped1
+  mapped2 = linear_mapping(spec_intensity2, 0, 100)
+  ;print,mapped2
+  mapped3 = linear_mapping(spec_intensity3, 0, 100)
+  mapped4 = linear_mapping(spec_intensity4, 0, 100)
+  
+  mapped_plot = PLOT(wavelengths, mapped1, title=TeXtoIDL('Linear Mapped Intensity Spectra at 0.5MK'), $
+    xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', 'b', NAME=TeXtoIDL('LOS Int. = 0.1R☉')) ;, XRANGE = [3690,3760], YRANGE = [10, 18]
+  mapped_plot2 = PLOT(/overplot, wavelengths, mapped2, 'r', NAME=TeXtoIDL('LOS Int. = 0.5R☉'))
+  mapped_plot3 = PLOT(/overplot, wavelengths, mapped3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 2.0R☉'))
+  mapped_plot4 = PLOT(/overplot, wavelengths, mapped4, color=[255, 179, 0], NAME=TeXtoIDL('LOS Int. = 7.0R☉'))
+  
+  l = legend(TARGET=[mapped_plot,mapped_plot2, mapped_plot3, mapped_plot4], POSITION=[3900,95], $
+    /DATA, /AUTO_TEXT_COLOR)
+
+
+  diff1 = (mapped2 - mapped1)
+  diff2 = (mapped3 - mapped1)
+  diff3 = (mapped4 - mapped1)
+  
+  diffp = PLOT(wavelengths, diff1, title=TeXtoIDL('Linear Mapped Intensity Spectra Difference at 0.5MK'), $
+    xtitle='Wavelength (Å)', ytitle='Spectra Difference (%)', 'b', NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 0.5R☉'))
+  diffp2 = PLOT(/overplot, wavelengths, diff2, 'r', NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 2.0R☉'))
+  diffp3 = PLOT(/overplot, wavelengths, diff3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 7.0R☉'))
+  
+  l = legend(TARGET=[diffp,diffp2,diffp3], POSITION=[3900,1.85], $
+    /DATA, /AUTO_TEXT_COLOR)
+
     
     
   
