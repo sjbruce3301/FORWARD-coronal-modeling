@@ -58,7 +58,7 @@ pro compare_LOS_effects
   diffp2 = PLOT(/overplot, wavelengths, diff2, 'r', NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 2.0R☉'))
   diffp3 = PLOT(/overplot, wavelengths, diff3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 7.0R☉'))
   
-  l = legend(TARGET=[diffp,diffp2,diffp3], POSITION=[3900,1.85], $
+  l = legend(TARGET=[diffp,diffp2,diffp3], POSITION=[4550,1.85], $
     /DATA, /AUTO_TEXT_COLOR)
 
     
