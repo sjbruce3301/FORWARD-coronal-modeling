@@ -7,7 +7,7 @@ pro stdev_map_test
   temp_range = temp_min + (temp_max - temp_min) * findgen(temp_points) / (temp_points - 1)
   dev_array = fltarr(n_elements(temp_range), 2)
   
-  LOS_int=0.5
+  LOS_int=5
   
   for i = 0, (n_elements(temp_range) - 1) do begin
     ; Call cram_sim function

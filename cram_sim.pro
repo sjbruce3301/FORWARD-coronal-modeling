@@ -78,8 +78,8 @@ foi = 1-u2rc/3.-v2rc/2.
 
 ;	****  define some variables in integration  ****
 
-minx = -LOS_int_absvalue		;min distance along line of sight , normal -7 to 7
-maxx = LOS_int_absvalue		;max distance along line of sight
+minx = (-LOS_int_absvalue)		;min distance along line of sight , normal -7 to 7
+maxx = (LOS_int_absvalue)		;max distance along line of sight
 xstep = 0.5			;step size along line of sight
 maxr = fix(sqrt(maxx^2 + rho^2))
 xs = findgen(maxr*20+1.)/20. + 1.003

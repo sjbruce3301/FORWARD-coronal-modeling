@@ -54,9 +54,9 @@ pro compare_LOS_effects
   diff3 = (mapped4 - mapped1)
   
   diffp = PLOT(wavelengths, diff1, title=TeXtoIDL('Linear Mapped Intensity Spectra Difference at 0.5MK'), $
-    xtitle='Wavelength (Å)', ytitle='Spectra Difference (%)', 'b', NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 0.5R☉'))
-  diffp2 = PLOT(/overplot, wavelengths, diff2, 'r', NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 2.0R☉'))
-  diffp3 = PLOT(/overplot, wavelengths, diff3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 0.1R☉ to 7.0R☉'))
+    xtitle='Wavelength (Å)', ytitle='Spectra Difference (%)', 'b', NAME=TeXtoIDL('LOS diff = 0.1 - 0.5R☉'))
+  diffp2 = PLOT(/overplot, wavelengths, diff2, 'r', NAME=TeXtoIDL('LOS diff = 0.1 - 2.0R☉'))
+  diffp3 = PLOT(/overplot, wavelengths, diff3, color=[22, 222, 65], NAME=TeXtoIDL('LOS diff = 0.1 - 7.0R☉'))
   
   l = legend(TARGET=[diffp,diffp2,diffp3], POSITION=[4550,1.85], $
     /DATA, /AUTO_TEXT_COLOR)
