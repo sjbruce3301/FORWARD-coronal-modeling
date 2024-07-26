@@ -5,24 +5,24 @@ pro compare_LOS_effects
   ;LOS_int_absvalue = 0.5
   
 
-  spectrum = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 0.1)
+  spectrum = cram_sim_spectrum(3500, 4600, 100, 1.5, 2.0, 0.1)
   wavelengths = spectrum[*,0]
   spec_intensity = spectrum[*,1]
-  spec_p = PLOT(wavelengths, spec_intensity, title=TeXtoIDL('Integrated Intensity Spectra at 0.5MK'), $
+  spec_p = PLOT(wavelengths, spec_intensity, title=TeXtoIDL('Integrated Intensity Spectra at 2.0MK'), $
     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', 'b', NAME=TeXtoIDL('LOS Int. = 0.1R☉'))
     
 
-  spectrum2 = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 0.5)
+  spectrum2 = cram_sim_spectrum(3500, 4600, 100, 1.5, 2.0, 0.5)
   wavelengths = spectrum2[*,0]
   spec_intensity2 = spectrum2[*,1]
   spec_p2= PLOT(/overplot, wavelengths, spec_intensity2, 'r', NAME=TeXtoIDL('LOS Int. = 0.5R☉'))
   
-  spectrum3 = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 2.0)
+  spectrum3 = cram_sim_spectrum(3500, 4600, 100, 1.5, 2.0, 2.0)
   wavelengths = spectrum3[*,0]
   spec_intensity3 = spectrum3[*,1]
   spec_p3= PLOT(/overplot, wavelengths, spec_intensity3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 2.0R☉'))
   
-  spectrum4 = cram_sim_spectrum(3500, 4600, 500, 1.5, 0.5, 7.0)
+  spectrum4 = cram_sim_spectrum(3500, 4600, 100, 1.5, 2.0, 7.0)
   wavelengths = spectrum4[*,0]
   spec_intensity4 = spectrum4[*,1]
   spec_p4= PLOT(/overplot, wavelengths, spec_intensity4, color=[245, 27, 136], NAME=TeXtoIDL('LOS Int. = 7.0R☉'))
@@ -39,7 +39,7 @@ pro compare_LOS_effects
   mapped3 = linear_mapping(spec_intensity3, 0, 100)
   mapped4 = linear_mapping(spec_intensity4, 0, 100)
   
-  mapped_plot = PLOT(wavelengths, mapped1, title=TeXtoIDL('Linear Mapped Intensity Spectra at 0.5MK'), $
+  mapped_plot = PLOT(wavelengths, mapped1, title=TeXtoIDL('Linear Mapped Intensity Spectra at 2.0MK'), $
     xtitle='Wavelength (Å)', ytitle='Total Integrated Intensity', 'b', NAME=TeXtoIDL('LOS Int. = 0.1R☉')) ;, XRANGE = [3690,3760], YRANGE = [10, 18]
   mapped_plot2 = PLOT(/overplot, wavelengths, mapped2, 'r', NAME=TeXtoIDL('LOS Int. = 0.5R☉'))
   mapped_plot3 = PLOT(/overplot, wavelengths, mapped3, color=[22, 222, 65], NAME=TeXtoIDL('LOS Int. = 2.0R☉'))
@@ -53,7 +53,7 @@ pro compare_LOS_effects
   diff2 = (mapped3 - mapped1)
   diff3 = (mapped4 - mapped1)
   
-  diffp = PLOT(wavelengths, diff1, title=TeXtoIDL('Linear Mapped Intensity Spectra Difference at 0.5MK'), $
+  diffp = PLOT(wavelengths, diff1, title=TeXtoIDL('Linear Mapped Intensity Spectra Difference at 2.0MK'), $
     xtitle='Wavelength (Å)', ytitle='Spectra Difference (%)', 'b', NAME=TeXtoIDL('LOS diff = 0.1 - 0.5R☉'))
   diffp2 = PLOT(/overplot, wavelengths, diff2, 'r', NAME=TeXtoIDL('LOS diff = 0.1 - 2.0R☉'))
   diffp3 = PLOT(/overplot, wavelengths, diff3, color=[22, 222, 65], NAME=TeXtoIDL('LOS diff = 0.1 - 7.0R☉'))
