@@ -1,0 +1,28 @@
+
+
+**********************************************************************
+In m1synthd.f  
+
+following was omitted, so no trapzoidal rule was applied in m1synthd
+
+<  GX=double(I-1)*GXSTEP+GXMIN
+<          WTX=RSUNCM*GXSTEP
+<          IF(I  EQ  1 .OR. I  EQ  NGX) WTX=0.5*WTX
+
+
+following conditional removed all collisions!
+
+>          rrr=sqrt(gx*gx+gy*gy+gz*gz)
+>          IF(RRR .gt. ICOLL) COLL= .FALSE.
+
+following doubled the integration path length increment!!
+
+
+>             gxstep = (r3d(i+1)*sin(theta3d(i+1))*cos(phi3d(i+1))
+>      *               -  r3d(i-1)*sin(theta3d(i-1))*cos(phi3d(i-1)))
+
+
+these errors are not present in our original m1synth.f
+
+
+**********************************************************************

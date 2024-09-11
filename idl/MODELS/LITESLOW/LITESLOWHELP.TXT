@@ -1,0 +1,76 @@
+;************************************************************************
+;
+;;
+; Name: LITESLOW
+;
+; REFERENCE: Lites, B. and Low, B. C., Sol. Phys., 174, 91, 1997
+;
+; Purpose: Calculate the density, temperature, magnetic field of the
+;          LITES-Low model at a location rpB, thetapB, phipB (true spherical
+;          coordinates)
+;
+;
+; Lites & Low 1996 model of spheromak magnetic field.
+;  
+; This model is force-free both in the spheromak and surrounding open field regions.  
+; This solution will be in equilibrium except at the interface between spheromak and 
+; open field solution. An isothermal, hydrostatic background is assumed.
+;                                         
+;
+;;Keyword Inputs:  
+;		   
+;         MORPHOLOGY/POSITION
+;
+;		FRONTHEIGHT, LEGSANG-- these are the position of the front
+;			of the bubble and the angle subtended by its legs
+;			at the bubble's broadest point, 
+;			legsang INPUT in DEGREES
+;			these inputs will determine 
+;			OUTPUTS xo and rbub (see below)	
+;			DEFAULT FRONTHEIGHT=1.3, LEGSANG=15.
+;
+;         PHYSICAL PROPERTIES
+;
+;
+;		AO - this is the constant of proportionality between
+;	   		the stream function S and the pressure Pi
+;			DEFAULT AO=1.75  OUTPUT multiplied by -1/Muse
+;			where Muse = (2./3.)*ao*alnot*alnot
+;			This is because the roots alnot chosen in 
+;			liteslow vs giblow end up with B vs. -B 
+;			-- same handedness, but opposite sign.
+;			Muse allows us to input ao with a value that ends up
+;			equivalent to the maximum Br (bubble coords)
+;			
+;
+;	     	ALNOTRBUB - the eigenvalue parameter of the twisted flux
+;	    		rope model -- OUTPUT alnot (rbub calculated below)
+;			DEFAULT (unlikely to change) ALNOTRBUB=4.4935
+;			NOTE THIS HAS BEEN REMOVED FROM WIDGET 
+;
+; 		SIG1 - the rotation about the spheromak core (rotation
+;           		about x-axis)  INPUT in DEGREES
+;			DEFAULT SIG1=90  OUTPUT in RADIANS
+;
+;		OUT -  a parameter which scales the outer field solution
+;			since there is a discontinuity around bubble for field
+;			(and total pressure) this can be used to scale external
+;			field as desired  DEFAULT out= 0.1 OUTPUT unchanged
+;
+;		DENSSCALE - a parameter that scales the outer density
+;			similar concept to OUT
+;                       DEFAULT 2.
+;
+;    		AA,BB,CC,DD,EE,FF - background density, pressure parameters, 
+;			for hydrostatic equilibrium OUTPUT as above but
+;			aa, cc, ee  multiplied by 1d8 
+;			use values from Schmit&Gibson 2011
+;
+;
+;  		VELIMPOSE - impose a velocity of magnitude VELIMPOSE 
+;		directed along the field
+;               will overwrite any velocity field already loaded into the cube
+;               if nonzero
+;                       DEFAULT 0.d0
+;
+;

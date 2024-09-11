@@ -1,0 +1,2 @@
+      PARAMETER (MM=300,MX=MM*3,MY=MM*2,MZ=MM*3) 
+C (note this changed in Phils 6jul22 distribution- was MM=150)

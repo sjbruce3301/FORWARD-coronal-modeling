@@ -1,0 +1,681 @@
+;OBS TAB (only there for integrated quantities, not Physical Diagnostics or Data)
+;
+;   TAB HEADER: keyword LINE - 
+;		Default PB if neither line nor 
+;		instrument set; If instrument is set but not line there is a 
+;		different default for each instrument.
+;
+;       	keyword INSTRUMENT -
+;		Default 'WL' (white light) 
+;		for cases where neither line nor instrument is set
+;
+; 	keyword POS (on or off)  forces a plane of sky calculation for observables
+;		so integration is only over one LOS pixel
+;		  If LOSUSE (see below) set to XLOS it will be the X=0 plane of sky
+;		  If LOSUSE set to TLOS it will be the Thomson Sphere
+;
+; Choice of radial filter
+;
+; 	keyword RFILTER (NO_FILTER, AIA_FILTER, NRGF_FILTER, QUARTERPOWER_FILTER,GAMMA_FILTER,RPOWER_FILTER)
+;		only AIA DATA allows choice of AIA_RFILTER 
+;		NRGF by Fineschi (based on Morgan et al SP 2006)
+;		GAMMA is gamma corrected (by chosen dispgamma) with chosen exponent (dispexp)
+;		RPOWER_FILTER is intensity times plane of sky radial position raised to a chosen exponent (rpow)
+;		QUARTERPOWER is just intensity raised to the quarter-power
+;		-- all act to enhance structure at higher radii
+;		(NOTE that activating keyword "PLOTLOG" (under Plot tab) has a similar effect)
+;		WARNING! Units are not meaningful for filtered data, and color table
+;		label will included "FILTERED" to indicate this.
+;
+;    If temperature-sensitive observable:
+;
+;	keyword POP2ON (1 or 0)
+;         turns on and off population 2 - needs to be on
+;         for POP2COLDEN or POP2LOSEM (see Observables), and for POP2TREGIME button to appear
+;         Note, if the model does not have Pop2 capability, POP2ON
+;         will be set to zero, and with it POP2TREGIME
+;
+;       keyword POP2TREGIME - temperature regime for a second population if defined,
+;          if set to 1, treats second population as coronal, and
+;            can have different POP2ABUNDANCE
+;          if set to 2, treats second population as chromospheric and applies
+;            Lyman absorption (POP2IONFRAC input)
+;	   NOTE if calculating non-spectral observable (e.g. WL, EM...) there is 
+;	    no difference between POP2TREGIME=1 and 2
+;	   if set to 3, second population density is set to zero so does not contribute to los integrals
+;          if set to 0 (default), second population ignored (this will be forced
+;            for POP2ON=0, and vice verse).
+;          if model CAVMORPH, Pop2TRegime will be forced by parameter choice
+;            so can't be set by user and should not appear in widget
+;
+; if spectropolarimetric instrument (e.g. CoMP) have
+;
+;       keyword ROTAZ
+;               option of changing reference frame
+;               this will affect Q, U, and Azimuth
+;               choices are radial (frame w.r.t. local vertical)
+;               N-S (frame w.r.t sun's rotation axis)
+;               E-W (frame w.r.t. equator
+;
+;
+; if WL have option of turning on/off F corona
+;
+;	keyword FCOR
+;  		using Koutchmy-Lamy formula
+;
+; also if WL can change limb darkening coefficient to match whitelight center wavelength (see
+;	keyword ULIMB
+;		default 0.63, appropriate for centered on 520 nm
+;			See Altschuler & Perry 1972 p 415
+;
+; if RADIO or FARADAY have choice of frequency 
+;
+;	keyword FREQUENCY_MHz
+;
+; if RADIO have choice of whether to do gyroresonance (or just 
+;		Bremstrahllung)
+;	***NOTE -- no ray tracing is done in these calculations,
+;       *****  at low frequencies, refraction can be important so
+;       *****  this needs to be considered.  
+
+;	keyword DOGYRO
+; 
+; if EUV spectrogram instrument (EIS, CDS, IRIS, MYSPECT, IONDENS)  have choice of frequency
+;
+;	keyword WAVELENGTH_ANG (Angstroms)
+;	keyword WAVELENGTH2_ANG (Angstroms) -- only used for WL spectroscopy (WLRAT)
+;
+;   and also ion number 
+;
+;	keyword NUMION (integer)
+;  		(note element is assigned in Observables drop-down menu)
+;
+; SEESPEC TAB
+;
+; ONLY VISIBLE FOR EUV/XRAY IMAGERS AND SPECTROMETERS/SPECTROPOLARIMETERS
+;
+;  keyword SEESPEC - used by widget to toggle visibility of other keywords 
+;	default 1 (on)
+;	(note not all are necessarily displayed)
+;
+;  keyword ABUNDANCE - default to 'sun_coronal_1992_feldman'
+;
+;  keyword POP2ABUNDANCE - default to ABUNDANCE
+;
+;  keyword CVERSION - Chianti version, default is most recent
+;
+;  keyword LLIM - emissivity limit for which lines to include
+;
+;  keyword LWIDTH - linewidth for spectograph instruments.
+;
+;  FOR UVMODEL
+;
+;  ONLY VISIBLE FOR UV SPECTROPOLARIMETERS
+;
+;  keyword NANGLEINT -- how many steps to take in integrating 
+;	over solid angle for incoming radiation
+;
+;  keyword  COLLKEY - whether to do collisions and scattering (1) 
+;			or just scattering (0) 
+;			or just collisions (-1) 
+; 
+;  keyword  ISOTROPIC - whether to do isotropic (1) or 
+;       anisotropic (0) model (UVMODEL ONLY)
+;       If set, any ModSolStruct.AnIso will be ignored (see below)
+;
+;  keyword WPAR_OPEN, WPAR_CLOSED -- multiplicative factors 
+;       to establish W_PAR if not set in ModSolStruct
+;       factors multiplying W_MIN which depends on temperature, ion mass
+;       If info on open vs closed not available, 
+;	will assume all is closed
+;
+;  keyword ANISO_OPEN -- model choice for ANISO 
+;       not used if set in ModSolStruct (UV spectro)
+;       If info on open vs closed not available, 
+;	will assume all is closed
+
+;
+; NOISE TAB
+;
+; CURRENTLY ONLY VISIBLE FOR CORONAL POLARIMETERS
+;
+; ;  Keywords:
+;
+;       DONOISE: whether or not to add photon noise
+;		also toggles visibility of other keywords
+;
+;       APERTURE - aperture of telescopes
+;          units: centimeters
+;
+;	INTEGRATION: time observed
+;               units: seconds
+;
+;       MODEFFINT, MODEFFQUANT - efficiency associated with Modulation Cycle for Stokes I, Quantity
+;         This will affect the noise calculation 
+;         and the total number of photons gathered by a telescope
+;         See Tomczyk technical note, pages 5 and 6
+;         noise is divided by this, so it represents sqrt(moddutycycle)
+;         where moddutycycle is the fraction of modulation cycle time applicable
+;         e.g. for CoMP, standard modulation cycle is
+;         (Io+Qo, Io-Qo, Io+Uo, Io-Uo, Io+Vo, Io-Vo)
+;         so moddutycycle for I is 1, moddutycycle for Q,U,V is 1/3
+;         and MODEFFINT = 1, MODEFFQUANT is 1/sqrt(3)
+;         but even for CoMP, one might want to choose
+;               MODEFFQUANT=MODEFF=1 e.g. for [Io+Vo,Io-Vo]);
+;               or MODEFF=1, MODEFFQUANT=1/sqrt(2) for (Io+Qo, Io-Qo, Io+Uo, Io-Uo)
+;
+;       EFFICIENCY - expected efficiency of telescopes
+;          units: fraction
+;
+;       BACKGROUND - telescope location background
+;          units: ppm (parts per million)
+;
+;       ERRTRUNC
+;               a threshold on error to plot.
+;                 If positive, it is relative error, so points of SNR<1/ERRTRUNC
+;                       won't be plotted as long as NULLDATCOLOR is set
+;                 If negative, it is absolute error, so points of photon noise<ERRTRUNC
+;                       won't be plotted as long as NULLDATCOLOR is set
+;               (default, 1)
+;		
+; 	NORANDOM (toggle) -- whether to plot the random noise 
+;		default 0 (random noise).  
+;		TOGGLE REMOVED FROM WIDGET TO AVOID CONFUSION
+; 		-was possible to make plots with donoise on 
+;		but no noise indicated. So in general the noise
+; 		will always be shown as salt-and-pepper random 
+;		scaled to noise level
+; 		but from FOR_DRIVE line command if for example 
+;		one wants to set NULLDATACOLOR (in PLOTS tab below) negative 
+;		one can set NORANDOM=1 and have the masking 
+;		without the salt-and-pepper
+;
+;		Note if NULLDATACOOR is negative and NORANDOM=1, even though
+;		random noise is not plotted, its effect is evident 
+;		in the avoidance of plotting "bad" data.
+;
+;    Note -- RESOLUTION: spatial sampling size of image grid element 
+;		is NOT a keyword here, but rather
+;		is established by choice of field-of-view
+;			(XXMIN,XXMAX,YYMIN,YYMAX)
+;		and NGRID, NGY (grid spacing)
+;		Change using FOV TAB to the right
+;		it will be explicitly listed in 
+;		units of arc-seconds in plot title
+;
+;
+;  SEECOMP TAB
+;
+; CURRENTLY ONLY VISIBLE FOR CORONAL POLARIMETERS
+;
+;  More keywords are usable from command line, see
+;  FOR_COMPDEFAULTS
+;
+;  SEECOMP
+;    toggle visibility of other keywords (default on)
+;
+;  SMALLN
+;     density below which not to do collisions (cm^-3)
+;
+;  CECOEFF
+;      rate coefficient for elastic collisions
+;      should only be set for Fe13
+;      introduced in order to relax the alignment to mimic
+;      the effects of missing levels higher in the atomic ion
+;      term diagrams. 
+;
+;  see
+;       Judge, P. G., Low, B. C., and Casini, R.: 2006
+;       Spectral Lines for Polarization
+;       Measurements of the Coronal Magnetic Field.
+;       IV. Stokes Signals in Current-carrying Fields
+;       ApJ 651, 1229-1237
+;
+;       CAVEAT EMPTOR (pj)
+;
+;  ICOLL
+;    turn collisions off/on
+;
+;  IWLINE
+;    return full line profile
+;	Default yes; required
+;	for calculation of Doppler velocity
+;	or line width.  
+;	If only dealing with I,Q,U,V Az 
+;	could turn it off and speed up a bit.
+;
+;  VINTCHOICE -- how to represent Stokes V
+;       set in FOR_COMPDEFAULTS (carried through in ObsPramsStruct.FCompPrams)
+;               0: "classic"- use output of FORCOMP; here sign on V is changed at
+;                       rest wavelength (ilambda). This gives an unsigned integral _if_
+;                       Stokes V is symmetric about the rest wavelength, which it won't be
+;                       if e.g. there is velocity. BETTER NOT TO USE.
+;               1: "classic_check"same as 0, but calculated in this routine instead of FORCOMP -- should give
+;                       same result as 0 (for debugging purposes). BETTER NOT TO USE.
+;               2: "upgraded_classic" -- uses Icent instead of rest wavelength, calculated as 1
+;                       this is better for dealing with velocity (Icent is shifted) -- but,
+;                       still could be weirdness arising from LOS integral - that is, the zero
+;                       crossing of (integrated) Stokes V might not be at the maximum of (integrated) Stokes I
+;               3: "unsigned_integral" -- thus, integral is done over |V|, with a sign assigned
+;                       based on the dominating sign to the left of ilambda
+;                               ***DEFAULT***
+;               4: "peak-to-peak/eff" -- this is the max(V) - min(V), multiplied by sign based on
+;                       dominating sign to left of ilambda as in choice 2
+;                       In order to keep the units straight and avoid too many other changes,
+;                       this will be also be multiplied by I/Icent - effective line width
+;                       so that V/I will actually be V(peak to peak)/)Icent
+;               5:"peak-to-peak/lw" -- same as #3, but instead of multiplying by I/Icent
+;                       multiplies by line width (calculated below via gaussian fit)
+;
+;
+;   NOTE if IWLINE=0 then VINTCHOICE is forced to 0
+
+
+
+;
+;
+; LOS TAB
+;
+;      keyword LOSUSE ('Tau'/'XLos'/'TLos')
+;       - line of sight angle TAU or distance along line of sight
+;               XLOS is parallel lines of sight
+;          and now added TLOS can be along non-parallel lines of sight
+;               default 'Tau'
+;       --> LosPramsStruct Tag LosUse (identical unless DoDisk changes it to XLos)
+;               or AZEQUI changes 'XLOS' to 'TLOS'
+;                  unless POS is set -- in which case
+;                  it will integrate around X=0 plane
+;
+;       keyword NOSTRETCH -- if set and LOSUSE=TLOS, 
+;               will not stretch TLOS step with elongtion angle 
+;               but rather stick to same LOSMIN and LOSINT for all 
+;               lines of sight
+;               default,0
+
+;
+;  Observer's position - controls line of sight
+;	and defines plane of sky
+;
+;      keyword CMER - (DEGREES) --  
+;		Central meridian longitude (e.g. Carrington coordinates)
+;		of observer.
+;
+;		If date is not set,
+; 		for plane-of-sky GRID, cmer default -90, so that model structure at
+; 		zero longitude is centered at west(right) limb
+; 		for Carrington map GRID cmer default 180 centers 
+;		Carrington map plots on 180
+;
+;
+;      keyword BANG (double - DEGREES) -- solar B angle 
+;		Heliolatitude of observer
+;		Default zero
+;
+;  Line of sight integration
+;
+;      keyword LOSMIN (double - GENERALLY NEGATIVE)  - 
+;	minimum line-of-sight distance or angle
+;		if XLOS (SOLAR RADII) 
+;			Default x = -.5, which is r = sqrt(2.) 
+;			for LOS intersecting photosphere
+;		if TAU (RADIANS) 
+;			Default: -pi/4 (pi/2 would be for infinite LOS)
+;               	note xlos = 0 / tau = 0 is plane of the sky
+;		if TLOS (SOLAR RADII)
+;			Defaults as XLOS, but scaled by rpos 
+;			  (intersection of line of sight with X=0 plane of sky)
+;			 rpos=DISTOBS*tan(elong); elong = elongation angle
+;			 DISTOBS (see below) = distance to observer (1AU default)
+;      keyword LOSINT (double) -  resolution along the line of sight
+;		if XLOS (SOLAR RADII)
+;			Default 0.005
+;		if TAU (RADIANS)
+;			Default aboue 0.02
+;		if TLOS (SOLAR RADII)
+;			Default as XLOS; scaled as in LOSMIN
+;
+;      keyword NLOS (integer)- number of points to integrate along line of sight
+;		Default: number needed for symmetry about POS 
+;		(LOSMIN may need to be tweaked)
+;
+;		ASYMMETRY ABOUT POS IS ALLOWED but requires user input 
+;		of all three parameters (no defaults)
+; 		otherwise the program will assume symmetry is desired 
+;		and modify parameters accordingly
+;
+;		****TO FORCE SYMMETRY ABOUT PLANE OF SKY FROM WIDGET WHEN 
+;		CHANGING NLOS AND/OR LOSMIN -- JUST SET NLOS=0***
+;
+;   What to do about solar disk
+;
+;       keyword OCCULT (double) - radial height at which to draw occulting disk
+;               if negative value, plot dashed line and show all points
+;               Default 1 Rsun (photosphere)
+;		Units always Rsun (even when AZEQUI set and display is elongation)
+;
+;       keyword UPOCCULT (double) - radial height above which no data plotted
+;		negative plot dashed line and show all points
+;               Default 1000  Rsun- meaning no upper occulter
+;		Units always Rsun (even when AZEQUI set and display is elongation)
+;
+;      keyword DODISK (0/double) - default = 0; 
+;		if dodisk set, properties are calculated on and integrated
+;		above sphere of size dodisk (dodisk=1.d0 would be the photosphere)
+;	  ***NOT AN OPTION FOR White light coronagraph and Coronal Polarimeter observations
+;	  ***NOTE - to turn on OCCULT, DODISK must be set to zero first**
+;		Units  Rsun 
+;
+;;
+;       keyword INCRES (0/1) - what to do above disk
+;               INCRES=1 means double resolution
+;               INCRES=0 means throw away half the points (the ones that would
+;               have been behind the disk)
+;
+;   Where to position model structure
+;
+;       keyword PHIO (double - DEGREES) allows a rotation of 
+;	 	model structure in phi, useful for fitting data.
+;		or for Carrington maps for changing numbers on X axis
+;
+;		By FORWARD convention, model structures 
+;		are centered on phi=0
+;
+;   		If you are comparing model and data, or looking from
+;		a viewing angle for a given day, and want to (for 
+;		example) move a structure to a limb longitude appropriate
+;		to the central meridian of the day, the way to do it
+;		is to change PHIO rather than CMER.  This way also,
+;		if you go back and forth between STEREO and Earth's view
+;		point, the central meridian will change and then you 
+;		can see how this affects the model centered at what
+;		used to be the limb for the other viewpoint.
+;
+;		For model CAVMORPH, parameter PHCS is similar to
+;		to PHIO (unlike THCS vs THETAO, see below).
+;		Except that embedded cavity and nougat central longitude
+;		(NOUGPHCS and CAVPHCS) do not automatically change with PHCS,
+;		while PHIO rotates entire structure, streamer, cavity, and nougat
+;		
+;
+;	keyword THETAO (double - DEGREES) similar to PHIO, allows
+;		a rotation of model structure from equator to 
+;		a latitude THETAO in heliographic coordinates.
+;	
+;		By FORWARD convention, model structures are centered on 
+;		theta=90 in heliographic coordinates.
+;
+;		So, by choosing coordinates (THETAO, PHIO) a model
+;		structure is placed anywhere on the sun, and then
+;		an integral can be performed
+;		depending on the viewer's position (BANG, CMER)
+;		
+;		CAVMORPH model parameter THCS is subtly different 
+;		from THETAO, in that it simply moves the model
+;		streamer center to colatitude central position THCS.
+;		Changing THETAO rotates everyhing, so a streamer would
+;		lie along a great circle,not parallel to the equator as
+;		it would from a change in THCS. Also, note NOUGTHCS/NOUGTOP_TH and
+;		CAVTOP_TH (positions of embedded cavity top and nougat center and top) do not
+;		automatically change with a change in THCS, whereas a change
+;		in THETAO rotates the entire structure, streamer, cavity, and nougat.
+;
+; 		NOTE THETAO is not really meaningful for global models
+;		***so turned off for PSIMAS and AWSOM and PFSSMOD and TOMO and STRIA***
+;
+;		(note PHIO can still be useful for global models
+;		for making Carrington maps not centered on 180)
+;
+;		NOTE also- THETAO is NOT equivalent to P angle/roll
+;		  except for the special case of BANG=0, CMER=-90, PHIO=0
+
+;
+; FOV TAB
+;
+;       keyword GRIDTYPE (string - PlaneOfSky or CarrMap or UserInput) 
+;		default PlaneOfSky
+;
+;	keyword DISTOBS (double Rsun)
+;		distance of observer to Sun center
+;		Default 215 Rsun
+;
+;  PLANE OF SKY
+;
+;       keywords  XXMIN,XXMAX,YYMIN,YYMAX  (doubles - SOLAR RADII)
+;		 --  size for plot
+;		default +/-1.5 Rsun; or +/-45 degrees if AZEQUI (see below) set
+;
+;	keywords NGRID (integer) and NGY (integer)-- 
+;		grid spacing and size of output plot
+;		(if NGY set partly overrides NGRID so that 
+;		DX does not have to equal DY)
+;		ngrid default 256 for POS, 128 for LOS integrated, 
+;		nx=ny=ngrid unless limb is set - nx=ngrid/2; ny=ngrid
+;
+;       keyword AZEQUI (0/1)
+;          whether to plot in Cartesian (X-Y-Z) or Azimuthal Equidistant projection
+;               DEFAULT 0 (Cartesian)
+;
+;   If PLANE-OF-SKY gridtype and POS=1 (or Physical Diagnostic):
+;
+;       keyword LOSOFFSET (double -- SOLAR RADII) -- 
+;		Offset from center point of LOS integration
+                       (X=0 plane if LOSUSE=XLOS
+                       Thomson Sphere if LOSUSE=TAU or LOSUSE=TLOS)
+;               Default 0. means at plane of sky or Thomson Sphere, 
+;		otherwise, steps towards away along observer-sun line
+;
+;               If DoDisk is set, POS slices plot limb at position LOSOFFSET
+;               and also surface of radius DoDisk.  If DoDisk < LOSoffset,
+;               essentially this plots just the portion of the surface that lies
+;               in front of LOSoffset.  If LOSoffset < Dodisk, it plots the portion
+;               of the plane slice at distance DoDisk that is unobstructed by the
+;               spherical surface of radius DoDisk.
+;
+;   CARRINGTON MAP
+;
+;       [keywords XXMIN,XXMAX,YYMIN,YYMAX  (doubles -- DEGREES)]
+;		for now -- these are not explicitly set
+;		so standard Carrington map  is used, i.e.
+;		xxmin/xxmax=0/360. yymin/yymax=0/180.
+;
+;	keywords NGRID (integer)
+;               ngrid default 180 (makes 2*NGrid,NGrid+fix(1./dang)
+;                 (phi,theta) grid -- for ngrid=180 dang will be just
+;			under 1 so 181 degrees in latitude. Only will
+;			be exactly ngrid degrees in latitude for 
+;			lower resolution.
+;
+;       keyword RHEIGHT (double -- SOLAR RADII) - Height where data is extracted
+;
+;	keyword LIMB ('Cmer'/'East'/'West') -- which limb or central meridian
+;	 		to extract slices from
+;		Note - longitude in the maps refers to the central meridian 
+;		longitude but the data is "extracted" at the limb - 
+;		so there is a +/- 90 degree rotation in making the maps 
+;		if East or West
+;		CMER is a special case and the integration is actually done 
+;		above central meridian.  Not allowed for Coronal Polarimeter 
+;		and White Light Coronagraphs.
+;		THERE WILL BE DIFFERENCES in EAST vs WEST Carrington maps
+;		if solar B angle interacts with angled structures;
+;		THERE WILL ALSO BE DIFFERENCES to vector quantities
+;			limb default 'West'
+;
+;
+; PLOT TAB
+;
+;
+;       keyword PLOTLOG (0/1) - plot in log scale
+;
+;       keyword UNITS
+            CORONAL POLARIMETER I, Q, U, V:
+;               if set to 'ERG/CM2/S/SR', CoMP type data will
+;               be plotted as in CLE (Judge&Casini) code,
+;               other choices are 'ERG/CM2/S/ARCSEC2',
+;               if set to 'PPM' (default) will provide in units in
+;               parts-per-million (PPM) of Sun central brightness
+;               at central wavelength
+;
+;               NOTE -- PPM is in units relative to Bsun_center 
+;		  (Sun central brightness for a given wavelength), 
+;		and so is independent of telescope.
+;               For cases ERG/CM2/S/SR and ERG/CM2/S/ARCSEC2
+;               NO TELESCOPE INFORMATION will be taken into consideration.
+;               However, PHOTONS will be calculated taking into
+;               consideration telescope information in ObsPramsStruct.NoisePrams
+;               and having it set should open the DoNoise widget
+;
+;               NOTE -- for DATA, for now since we are not calculating equivalent
+;               width for CoMP data we do not allow conversion of I, Q, U, V
+;               from PPM for DATA
+;
+;               WARNING: when plotting e.g. V/I or L/I units cancel out.
+;
+;	    WL Coronagraphs --  ('10^-8 Bsun_center, 1-^-8 Bsun_mean')
+;
+;           EUV/XRAY imagers -- ('DN/S/DETPIX, DN/S/MAPPIX')
+;               DN/S/DETPIX is relative to detector pixel size, so,
+;               changing resolution (e.g., NGRID, NGY) will not change
+;               value of intensity of model or data plotted.
+;               Every instrument will have a different detector pixel
+;               size (DETPIX), and these are defined in
+;               OBSERVABLES/FOR_DETPIX_LOOKUP.PRO.
+;
+;               DN/S/MAPPIX is relative to map pixel size, so
+;               this will change with NGRID/NGY.  However, for
+;               this every similar type observations (e.g.,
+;               171 Angstrom intensity in any of the EUV imagers)
+;               will be the same scaling from instrument to instrument
+;
+;	keyword COLORTABLE  - show color bar intensity 
+;
+;       keyword SUNEDGE (double)  - set to draw yellow sun outline at r=Rsun
+;		(A WIDGET OPTION FOR PLANEOFSKY only, and FORCED TO EQUAL
+;			DODISK IF DODISK SET SO DOES NOT APPEAR IN WIDGET)
+;
+;       keywords IMAX, IMIN (doubles) - max and min for intensity
+;		These will default to the min and max of data in FOR_PLOT
+;		For now we give them 'scaled to data' input
+;	
+; 	keywords NWINX/NWINY (integers) - size of window
+;	Default 750/750 for Plane of sky, 720/360 for Carrington map
+;		**NOTE since aspect ratio of 2:1 is forced for Carrington map,
+;		NWINY is not displayed in widget.
+;
+;       keyword USECOLOR (integer) - color table value 
+;		Default 0, greyscale 
+;		Then standards like 3 (heatscale)
+;		- can also use red/blue (42) for
+;               positive/negative data; warning dont do plotlog if so!  
+;		(can also use 41 - which is red/blue negative/positive)
+;		Also 7777 for AIA colortables 
+;		(will choose based on value of keyword LINE)
+;		If 7777 listed for non-AIA, will do AIA 193 color
+;
+;	keyword AXISCOLOR (integer) color of axis
+;	keyword BGCOLOR (integer) color of background -- 0 black, 1 white
+;
+;       keyword CHARSIZE, CHARTHICK (double)
+;
+;       keyword WHITEDISK (integer) - plots occulting disk in 
+;		white/color instead of black
+;		(ONLY A WIDGET OPTION FOR PLANEOFSKY, and ONLY IF DODISK=0)
+;		Default = 'null' means does not plot a disk - so will be central color of color bar
+;		change to 0 for black, 1 for white...
+;
+;       keyword NULLDATACOLOR (integer)  -- nulldata color
+;               Default = '' will be central color of color bar
+;               0 black; 1 is white, others are rainbow
+;               if set to negative, will not plot noisy data (see ERRTRUNC in NOISE TAB)
+;
+;	keyword TITLE,XTITLE,YTITLE (string)
+;		SET TO 'ZZ' TO BE BLANK 
+;
+;	keyword NOBANGLETITLE
+;               don't plot B ANGLE and CMER in plot title
+;
+;	keyword ADDTURBTITLE
+;		display spatial resolution of turbulence for model 'TURBHY' in title
+;
+; DOCONT TAB
+;
+;       keyword DOCONT (0/1/2) - add contours
+;		docont = 0 no contours
+;		docont = 1 contours on image
+;		docont = 2 (or higher) contours but no image
+;
+; 	default contours for PLANEOFSKY, no contours for CARRMAP
+;
+;
+;       keyord NOCONTCOLOR (0/1) - dont use color for contours 
+;
+;
+;       keyword NoCLABEL  (0/1)- don't put labels on contours 
+;
+;	keyword NLEV (integer) number of contour levels
+;
+;	keywrod C_CHARSIZE (double) size of contour label -- default is 2/3 of plot label size
+;
+;
+; FIELDLINES TAB (only there for models with magnetic fields)
+;
+;       keyword FIELDLINES (0/1) - overplot with small 
+;		fieldline vectors (plane-of-sky component of magnetic field)
+;		Other keywords appear when FIELDLINES box selected
+;		(PLANEOFSKY only)
+;
+;       keyword BSCALE (double) - Scale factor for the vector 
+;		overplot of fieldlines
+;			DEFAULT is 1 -- scaled to data 
+;		set to 0 for uniform length, negative number
+;		to adjust uniform length 
+;		and positive number to adjust scaled-to-data length
+;
+;       keyword BCOLOR (integer) - color of fieldlines
+;		Default red
+;
+;	keyword BTHICK (double) - thickness of vectors
+;	Default 1
+;
+;       keyword BMINUSE (double) - minimum field strength of 
+;		plane of sky field to plot vector for
+;
+; 	keyword NARROW (integer)
+;		spacing of vectors 
+; 		note number of points to skip varies with grid size, 
+;		thus ngrid/nsarrow is number of points to skip.  
+;
+; STKLINES TAB (only for Coronal Polarimeter observables)
+;
+;       keyword STKLINES (0/1) - overplot with linear polarization vectors
+;		(subject to 180 degree ambiguity and 90 degree ambiguity
+;		across Van Vleck angle)
+;		Other keywords appear when STKLINES box selected
+;
+;       keyword PSCALE (double) - The scale factor for plotting 
+;		the fieldline vector onto
+;                the plane of sky
+;               if set to zero, does fixed length lines, if less than zero,
+;               scales to absolute value (but fixed length), 
+;		if greater than zero then field line length reflects 
+;		POS strength, scaled by Pscale
+;
+;       keyword STKCOLOR (integer) - color of vectors (default green)
+;
+;
+;       keyword STKTHICK (double) - thickness of vectors (default 1.5)
+;
+;       keyword SMINUSE (double) -- minimum magnitude of plane of sky 
+;		to plot vector
+;
+; 	keyword NSTARROW (integer)
+;		spacing of vectors 
+; 		note number of points to skip varies with grid size, 
+;		thus ngrid/nsarrow is
+; 		number of points to skip.  
+;
+;	keyword ARROWAVE (0/1)
+; 		arrowave will average over skipped data in
+; 		creating arrow length and direction
+; 		default is  no averaging
+; 		(mostly useful for data plotting)

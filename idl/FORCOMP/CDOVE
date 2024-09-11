@@ -1,0 +1,6 @@
+      parameter (mtau=5000,munwrap=500000000)
+      dimension r3d(mtau),theta3d(mtau), phi3d(mtau),
+     *  dens3d(mtau),temp3d(mtau),br3d(mtau),
+     *  bth3d(mtau),bph3d(mtau),vel3d(mtau)
+      common /cdove/ r3d,theta3d,phi3d,dens3d,temp3d,
+     *  br3d,bth3d,bph3d,vel3d

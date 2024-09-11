@@ -1,0 +1,6 @@
+;
+;  these are structures containing input parameters  used by ICLE
+;  that are accessible through a common block:
+;
+common icleinput, input
+

@@ -1,0 +1,214 @@
+;
+;
+; Reference: Gibson et al., Front. Astron. Space Sci., 2016, https://doi.org/10.3389/fspas.2016.00008
+; 
+
+
+DATA TAB
+; 	Access data by file or calendar date (latter requires internet access)
+; 	Currently AIA, EUVI, EIT, COMP, SWAP, KCOR  by both file or date; XRT by file
+;
+
+MODELS TAB
+; analytic models (CAVMORPH, CROISSANT, MYDIPOLE, CIRTOY, GIBBAGLOW, GIBLOW, 
+; LITESLOW, LOWHUND, TOMO)
+; users numerical data cube access (NUMCUBE) (requires formatting as in http://www.hao.ucar.edu/FORWARD/FOR_SSW/idl/MODELS/NUMCUBE/make_my_cube.pro)
+; Potential Field Source Surface model (DeRosa) (PFSSMOD)
+; Predictive Science MAS model (PSIMAS) for HMI from web page:  http://www.predsci.com/hmi/data_access.php
+; AWSOM U Michigan model
+;
+; model parameters are set in model widget below top widget
+;
+
+OBSERVABLES TAB
+;  lots of observables that may be plotted integrated along the line of sight
+;   magnetically sensitive observables (like Stokes polarimetry)
+;   will not show as a choice if model not magnetic (e.g., model CAVMORPH)
+;
+; Some of the less obvious ones:
+;   WL Coronagraphs -- 
+;	XPOLG -- position from X=0 plane of center of mass along lines of sight
+;		(units, solar radii)
+;	TPOLG -- angle position from tau=0 (Thomson Sphere) of center of mass along lines of sight
+;		(units, radians)
+;	XPOLF/XPOLB -- position from X=0 of localized source determined from polarization ratio
+;		two solutions-- one will be a "ghost" solution symmetric about Thomson Sphere
+;		from true solution
+;		(units, solar radii)
+;	TPOLU -- position from Thomson Sphere of localiazed source determined from polarization ratio
+;		unsigned, so only one solution
+;		(units, radians)
+;	PR = polariation ratio, (1-p)/(1+p) (also = sin^2(tpolu))
+;	WLRAT = spectrographic WL -- like CODEX -- gets back
+;	  ratio at two chosen wavelengths RAT1 and RAT2
+;	  also spectrum saved in WLSPecStruct
+;
+
+PHYSICAL DIAGNOSTICS
+; lots of physical plasma properties that may
+; be plotted in the plane of the sky
+;  some are dependent on model (e.g., if magnetic or not)
+
+
+SETTINGS TAB
+;
+;       keyword    BG_INPUT,BG_OUTPUT -- a way of providing
+;                 background images to subtract off
+;                 in particular, if bg_output is set to a named file
+;                 integrated pB,B will be saved in it
+;                 conversely -- if bg_input file is selected 
+;		  it will be subtracted off
+;                 from pB, B before calculating P=pB/B
+;
+;       keyword MEMORY (integer) -- set to greater than zero if want to 
+;	loop one of the grid dimensions, to save IDL memory, if set to 
+;	other than one then nmem=memory pixel arrays will be looped through 
+;	a total of (ngrid*ngy)/nmem times (bites). memory = 1 goes to 
+;       Default value, 10000.
+;       Some machines may be able to run with memory=0, so no loops,
+;	(without IDL crashing) and this should improve run time.
+;
+;	Note Memory affects the plane-of-sky (X-Y) dimensions -- you might also find yourself
+;	out of memory if you make NLOS too big.  To deal with this, decrease the value of 
+;	MEMORY in step with any increase in NLOS - since the total number of grid pioints
+;	is MEMORY X NLOS
+;
+;	NOTE MEMORY = -1 will force nmem=1, so there will be a loop of 
+;	ngrid steps.
+;		
+;
+;      keyword READPRAMS(string), if set uses saved set of (input) parameters
+;		Default '' means unset
+;
+;      keyword READMAP(string), if set can rerun a forward calculation 
+;	either identically or with some changes to the way data is 
+;	displayed (through changes to plotting keywords). 
+;	readmap="(mapname).sav"
+;       If CoMP or physical diagnostic, can also change quantity being plotted
+;	without requiring recalculation.
+;		***SAVE FILE VIA FOR_DRIVE,/SAVEMAP,MAPNAME='myfile' ***
+;		***RESTORE FILE VIA FOR_DRIVE,READMAP='myfile.sav'
+;               ***NOTE MAPNAME AND SAVEMAP ARE DOCUMENTED BELOW***
+;
+;		Default '' means unset
+
+
+;       keyword WORKING_DIR (string) -- if set, 
+;		all I/O occurs here.
+;		fortran executable can also saved into working_dir.
+;		CAN BE SET AS ENVIRONMENTAL VARIABLE $FORWARD_WORKING_DIR
+;		DEFAULT '' means unset - defaults to directly idl session runs from
+;
+
+CALENDAR TAB
+;
+;       keyword DATE (string) - date of observations
+;               may affect calibration time (various programs in OBSERVABLES)
+;		also used to identify viewer position
+;		and to choose PFSS or PSIMAS or AWSOM datacube
+;               Default empty string means unset
+;
+
+
+FORWARD button
+; clicking on this runs the forward calculation
+; or displays the data
+
+
+GATHER WINDOWS
+; gathers widget windows
+
+
+OUTPUT TAB
+;
+;      keyword SAVEPRAMS (string), if set, saves (input) parameters to file
+;		default '' unset
+;
+;
+;      keyword MAPNAME (string) defaults to name of model+observable+output.
+;               default set here as then this is overwritten
+;               once these elements are established within FOR_DRIVE.
+;               ***note -- mapname is used for any output, whether it is
+;               a IDL save file, plot, or fits. 
+;
+;      keyword SAVEMAP (1 or 0), if set, saves all the output structures
+;               to a save file called  MAPNAME.sav. 
+;
+;		***SAVE FILE VIA FOR_DRIVE,/SAVEMAP,MAPNAME='myfile' ***
+;		***RESTORE FILE VIA FOR_DRIVE,READMAP='myfile.sav'
+;               ***NOTE READMAP IS DOCUMENTED ABOVE***
+;
+;       keyword EXTRATITLE (string) -- extra information for title
+;               used in figures and also added to output mapname
+;               (e.g., name of parameter being varied)
+;               Default '' means unset
+;
+;  *********************
+;	OUTPUT INCLUDES:  
+;		
+;	   QUANTMAP: this is the quantity calculated, e.g., the particular 
+;		observable or physical diagnostic. It includes the DATA, and other
+;		map parameters that define its center, pixelsize, etc.
+;		It can be plotted or manipulated as a SolarSoft map structure.
+;
+;	   STOKESSTRUCT: If the quantity calculated is a Coronal Polarimetric quantity,
+;		I,Q, U, V are all saved here.  If parameter IWLINE is set (default)
+;		the full wave profile is saved, along with velocities etc.
+;		If the map is read in for one of these other quantities rather than the original
+;		in QUANTMAP, FORWARD will replace the DATA in QUANTMAP with the new requested observable.
+;
+;	   LOSPRAMSSTRUCT: Includes parameters defining viewers line of sight used in calculation 
+;	   GRIDPRAMSSTRUCT: Includes parameters defining grid in plane of sky
+;	   OBSPRAMSSTRUCT: Includes parameters defining observable calculated
+;	   MODPRAMSSTRUCT: Includes parameters defining model used
+;
+;	   MODSOLSTRUCT: Model values for physical parameters in the plane of sky 
+;
+;	   PLOTSAVE: Plotting choices for map - can be overwritten
+;	   
+; 	   LOSINPUTS, GRIDINPUTS, OBSINPUTS, MODELINPUTS: mostly redundent with the *PRAMSSTRUCT -
+;		but in a form that enables quick loading of the widget fields
+;
+;
+;  *********************
+;
+;      keyword  MOREPLOTS (1 or 0) - useful when multiple plots are being
+;		 made using NOERASE
+;               basically keeps postscript file device open while set.
+;		and in widget to allow multiple plot windows open
+;
+;       keyword NOERASE (0/1) - don't erase - basically overplot on existing plot
+;
+;	keyword TIFF, PSPLOT (1/0)
+;		plot tiff and/or postscript file
+;	Defaults 0
+; 	(note FOR_DRIVE has more plotting options but they are not yet robust
+;		on the widgets)
+;
+
+
+PRINT COMMAND button
+; this will generate text call to FOR_DRIVE - if copied and pasted 
+; into solarsoft IDL session, will recreate forward calculation currently
+; set up.  Will also save text file with this info called gui_command_log.txt
+
+RESET button
+; will reset to defaults except for last model used
+
+QUIT button
+; quits widget session
+
+RECALCULATE button
+; runs FORWARD and forces full recalculation
+; otherwise if run using FORWARD button will look for
+; last saved map and see if anything has been changed that would affect
+; LOS calculation.  This saves time when for example doing simple plotting
+; display type changes, but, for example if one zooms in one might want to
+; force full recalculation of LOS to get higher resolution
+
+; SAVE button
+; runs FORWARD (not necessarily full recalculation)
+; and saves to file named with MAPNAME *and* the current Julian time stamp
+;
+;  See above under SAVEMAP for description of contents of saved file
+;

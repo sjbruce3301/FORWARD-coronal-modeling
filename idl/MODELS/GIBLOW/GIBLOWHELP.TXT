@@ -1,0 +1,149 @@
+;************************************************************************
+;+
+;
+; Name: GIBLOW
+;
+; REFERENCE: Gibson, S. and Low, B. C., ApJ, 493, 460, 1998
+;
+; Purpose: Calculate the density, temperature, magnetic field of the
+;          Gibson-Low model at a location rpB, thetapB, phipB (true spherical
+;          coordinates)
+;
+;;Keyword Inputs:  
+;		   
+;         MORPHOLOGY/POSITION
+;
+;		FRONTHEIGHT, LEGSANG-- these are the position of the front
+;			of the bubble and the angle subtended by its legs
+;			at the bubble's broadest point, for time = 0 (phiss=1)
+;			legsang INPUT in DEGREES
+;			these inputs along with apar will determine 
+;			OUTPUTS xo and rbub (see below)	
+;			DEFAULT FRONTHEIGHT=1.35, LEGSANG=25.
+;
+;         PHYSICAL PROPERTIES
+;
+;	        APAR - (also affects MORPHOLOGY) just as in the Bogdan and Low model,
+;          		this allows an expansion of the field and introduces
+; 		        currents. apar is the radial shift transformation used to make a
+;          		tear-drop shape (r -> r + apar)
+;			DEFAULT APAR=0.050  OUTPUT unchanged
+;
+;		AO - this is the constant of proportionality between
+;	   		the stream function S and the pressure Pi
+;			DEFAULT AO=1.75  OUTPUT divided by -Muse
+;			so that the amplitude of Ao ends up being the
+;			same as the maximum amplitude of Br (bubble coords)
+;			Note for Giblow Muse is negative
+;
+;	     	ALNOTRBUB - the eigenvalue parameter of the twisted flux
+;	    		rope model -- OUTPUT alnot (rbub calculated below)
+;			RESTRICTED TO EIGENVALUES OF J5/2 BESSEL FUNCTION
+;			Just the first 6 from Abramewicz and Stegun
+;			DEFAULT ALNOTRBUB=1,
+;				corresponds to
+;				smallest eigenvalue -- 5.763854
+;                       NOTE CHANGING SIGN CHANGES CHIRALITY 
+;                           (direction of twist around "apple core" of spheromak)
+;
+; 		SIG1 - the rotation about the spheromak core (rotation
+;           		about x-axis)  INPUT in DEGREES
+;			DEFAULT SIG1=90  OUTPUT in RADIANS
+;
+;		(GL_)OUT -  a parameter which scales the outer field solution
+;			since there is a discontinuity around bubble for field
+;			(but not total pressure) this can be used to scale external
+;			field as desired  DEFAULT out=.1  OUTPUT unchanged
+;
+;		PIO - this is a constant background pressure for the external solution
+;			better not to use this DEFAULT PIO=0  OUTPUT unchanged
+;
+;    		AA,BB,CC,DD,EE,FF - background density, pressure parameters, 
+;			for hydrostatic equilibrium OUTPUT as above but
+;			aa, cc, ee  multiplied by 1d8 
+;			see below for DEFAULT
+;
+;               BONLY - If set, force an isothermal solution and use a
+;                       density that is simply a fraction of the
+;                       background density.  E.G., set bonly=.5 to set 
+;                       fraction to 0.5 (can also be > 1 for overdense structure,
+;			with cavity substracture introduced via C1BONLY/C2BONLY below). 
+;			This is used to get have
+;                       realistic B field and density/temp useful for
+;                       producing Stokes Parameters; also for modeling morphological
+;			CMEs for coronal/heliospheric modeling
+;			BUT NOTE NOT IN FORCE BALANCE
+;			DEFAULT 0 (unset)
+;
+;		C1BONLY; C2BONLY -- only used if BONLY set; then creates a cavity
+;			which is C1BONLY fractional density (relative to background)
+;			and C2BONLY fractional height (relative to bubble)
+;			DEFAULT C1Bonly=.5, C2Bonly=.9
+;			(but only used if BONLY set)
+;
+;		ISOTHERMAL - temperature to set if doing BONLY
+;			default 1.55d6
+;
+;	 	BUBBLEONLY - returns zero for all parameters outside the bubble
+;
+;
+;      TEMPORAL PROPERTIES
+;
+;	 	ALPHA, VELMULT, TIME - these are parameters of the self-similar transform
+;	     		alpha positive = accel, neg = decel, zero = const. vel
+;			alpha nonzero requires an input file with velocity vs
+; 			time, e.g. phiss_vs_t_0.490000_1.38000d-07.dat
+;			velmult acts as a scaling factor for velocity 
+;			if set to zero obtain magnetostatic solution
+;			normalizes eta and alpha below (eta=velmult^2*1.38d-7)
+;			time should be input in hours, will be converted to secs below
+;			DEFAULT alpha=0 (const. vel; accel default alpha/eta=.49), 
+;			velmult=1, phiss=1, time=0
+;			OUTPUT ALPHA*VELMULT^2, ETA=VELMULT^2*1.38d-7, PHISS (see below)
+;
+;  VELIMPOSE - impose a velocity of constant magnitude VELIMPOSE directed along the field
+;               overwrites any velocity field already loaded in if nonzero
+;			UNITS KM/SEC
+;                       DEFAULT 0.d0
+;
+;	BOOKKEEPING
+;
+;              	SAVEPRAMS - if keyword set, write parameters to filename
+;                       (which is the keyword value saveprams)
+;                       or if set to 1, then return pramarray
+;
+;              	READPRAMS - if keyword set, read in parameters from filename
+;                       (which is the keyword value filename)
+;                       or if a structure than read directly
+;      
+; 
+;;ModPramsStruct Outputs:  
+;
+;		NAME -- giblow-- so that procedure can be called in intensint
+;		LABEL -- Gibson and Low -- for plot label
+;
+;		XO - this is the shift coordinates between
+;	   		the bubble system and the sun's coordinate system.
+; 	   		A choice of xo =1 should put the bubble at
+;	   		the solar surface at the equator.  
+;			Determined from frontheight, legsang, and apar
+;			as evaluated at phiss=1, time=0
+;
+;		RBUB - this is the radius of the bubble.  Determined from 
+;			values of frontheight, xo, and apar (phiss=1) 
+;	
+;		ALNOT -- this is the input eigen(alnotrbub)/rbub
+;				eigen(1) = smallest eigenvalue -- 5.763854
+;
+;		SIG1 -- as above but converted to RADIANS
+;
+;		AA, CC, EE  -- as above but multiplied by 1d8
+;
+;		APAR, AO, OUT, PIO, BB, DD, FF, - as inputted
+;		
+; 		ALPHA, ETA -- scaled by VELMULT^2
+;
+;		PHISS -- the main self-similar coordinate transform parameter
+;			phiss = 1 will be the magnetostatic solution
+;			calculated from alpha, eta, and time
+;

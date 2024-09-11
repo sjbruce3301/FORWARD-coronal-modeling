@@ -1,0 +1,118 @@
+;************************************************************************
+The beginnings of an implementation of the Low-Hundhausen Cartesian flux rope model.
+;
+; REFERENCE: Low, B. C. and Hundhausen, J. R., ApJL, 443, 818, 1995
+
+At the moment, the prominence current sheet (Aprom) is not included.
+And Adip is forced to zero. Thus this is the solution describe in
+Section 3.2.4 of Low&Hundhausen (1995), and as shown in Figure 10
+(except without the prominence).
+
+Observable properties such as
+
+        cavity radius, height, external vertical field, external density at the photosphere 
+	and the ratio of density at the flux rope axis to surrounding hydrostatic density (same height)
+
+fully constrain model parameters.
+
+
+Eventually, allowing Adip and eventually Aprom to vary may give some freedom in flux rope twist profile, for example, and possibly also cavity depletion profile.
+
+NOTE -- the temperature profile is increasing with height in this model, which is maybe ok for low 
+coronal (below temperature maximum).  However, we have a flag "isothermal" which allows fixing a temperature 
+above the bubble (fixed to value at z=ro), which is useful for the LOS integrated quantities.  
+If isothermal is set to a value, then the temperature is fixed everywhere (including below the bubble top) to that value.
+SEE FURTHER NOTES ON ISOTHERMAL AND HYDRO BELOW
+
+NOTE -- the model is 2D Cartesian -- it is fit into the spherical coordinates of the FORWARD codes by 
+assuming invariance in Phi.  This introduces an error in the magnetic force balance, and there is also 
+an error in the graviational description which is gz.  Both should be minimal for small-radius flux rope positioned close to photosphere.
+BUT THIS IS WHY WE HAVE OPTIONS FOR RADIAL HYDROSTATIC FALLOFF BELOW
+;************************************************************************
+;
+;
+;;Keyword Inputs:
+;
+;
+; WARNING: Following the model convention, X and Z are in the plane of the sky 
+;   and Y is out of the page. This is different than FORWARD with X out of the page and 
+;   Y-Z in the plane.
+;
+;
+;               R_OINPUT, X_OINPUT -- these are the radius of the flux rope,
+;                       and the percent distance from the axis
+;                       to the photosphere (at central meridian, Y=0)
+;                       both are input in units of solar radii
+;                       Note that X_O will be negative, with minimum
+;                       value required to be greater than -1.
+;                       DEFAULT R_O = 0.025, X_O = -0.6
+;                       OUTPUT changed to CGS
+;                       Determine ZO,ZETA_O (see below)
+;
+;               BXEX -- external bipolar field at base external to rope
+;                       (this is a magnitude and unsigned -- negative values will
+;                       if inputted will be converted)
+;                       DEFAULT 10 Gauss
+;
+;		SIGNLAMBDA -- direction of twist
+; 			this doesnt affect much except allows
+; 			bz/by to be either sign
+;			DEFAULT positive (1), OUTPUT UNCHANGED
+;	
+;		RHOEX -- number density
+; 			at base outside flux rope
+;			DEFAULT 5d8 (number density)
+;			OUTPUT changed to cgs
+;
+;		RHORAT -- density depletion of cavity
+;			DEFAULT 0.5
+;
+;		ADIP -- external dipole field
+;			FREE PARAMETER
+;			DEFAULT 0 -- makes problem fully observationally constrained
+;			OUTPUT UNCHANGED
+;
+;
+;               HYDRO - forces hydrostatic density falloff 
+;                       Because the model was cartesian originally so it will have
+;                       density falling off relative to the X=0 plane, not the spherical
+;                       center r=0, which is wrong
+;                       hydro=0 -- analytic model solution everywhere
+;                       hydro ne 0 and positive  DEFAULT=1
+;                         -- radial hydrostatic solution outside cavity/flux rope
+;                               and LH analytic model inside
+;                       hydro ne 0 and negative (like -1)
+;                         -- radial hydrostatic solution everywhere, even in the cavity
+;                       DEFAULT: hydro = 1
+;
+;               ISOTHERMAL -- forces temperature to be isothermal 
+;                       note -- this screws up the polytropic condition on the model,
+;                       which creates a increasing temperature with height;  
+;                       while this is sort of ok for the low corona where the rope sits, 
+;                       LOS integration would have temperature increasing too much
+;                       DEFAULT: ISOTHERMAL=1
+;                         the cavity/flux rope will keep the analytic model temperature 
+;                          (unless hydro=-1)
+;                         but outside the cavity (r>ro) it will be constant
+;                         with its value being the model temperature at r=ro at the equator
+;                       ISOTHERMAL=0
+;                         will be consistent with density and temperature
+;                         if hydro=0 that means will be LH model solution everywhere
+;                       ISOTHERMAL=a value (like 1.5e6) will be that value everywhere
+;                         even in the cavity
+;
+;		OUT - this will scale the field strength outside - again a kluge to better compare to Lites Low
+;			
+;               AA,BB,CC,DD,EE,FF - background density, pressure parameters,
+;                       for hydrostatic equilibrium OUTPUT as above but
+;                       aa, cc, ee  multiplied by 1d8
+;                       see below for DEFAULT
+;
+;
+;               VELIMPOSE - impose a velocity of magnitude VELIMPOSE 
+;               directed along the field
+;               will overwrite any velocity field already loaded into the cube
+;               if nonzero
+;                       DEFAULT 0.d0
+
+

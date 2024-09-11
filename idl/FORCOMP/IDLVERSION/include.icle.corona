@@ -1,0 +1,5 @@
+common corona, temp,ed,hd,totn,vel,vturb,h,$
+       alpha,bfield,thetab,phib,theta,pgamma,alarmor,dop
+common geometry, gx,gy,gz
+     
+

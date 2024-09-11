@@ -1,0 +1,4 @@
+C
+C (Note RHO replaced by RHOM in 6jul22 version)
+      COMMON /CATMO2/ VTURB,BH(5),HD(6),RHOM
+

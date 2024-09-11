@@ -1,0 +1,126 @@
+Name: GIBBAGLOW
+;
+; REFERENCE: Gibson, S. E., Bagenal, F., and Low, B. C., JGR, 101(A3), 4813, 1996
+;  if you use hydro model  -- choices are:
+;       HYDRO=2 
+;               Gibson et al., JGR, 104, 9691, 1999 [closed field]
+;               Guhathakurta et al., JGR, 104, 9801, 1999 [open field]
+;       HYDRO=3
+;               Vasquez et al., ApJ, 598, 1361, 2003
+;       HYDRO=4
+;               Cranmer et al., ApJ, 511, 481, 1999 [open field]
+;               Vasquez et al., ApJ, 598, 1361, 2003 [closed field]
+;
+;
+;Purpose: To create structure containing information concerning the
+;         Gibson-Bagenal-Low CME model; To be called by driver routine and resulting
+;         structure will be named ModPramsStruct (with ModPramsStruct.name='gibbaglow')
+;
+;  Called by FOR_MODELDEFAULTS
+;
+;Keyword Inputs:
+;
+;         PHYSICAL PROPERTIES
+;
+;  APAR - (also affects MORPHOLOGY) just as in the Bogdan and Low model,
+;                       this allows an expansion of the field and introduces
+;                       currents. apar is the radial shift transformation used to make a
+;                       tear-drop shape (r -> r + apar)
+;                       NOTE APAR not equal to zero can introduce negative densities
+;                       DEFAULT 0.0
+;
+;  BPAR - cusp height
+;                       DEFAULT 2.78
+;
+;
+;  GAMMA1, GAMMA3 - Dipole/Octopole terms (units Gauss)
+;                       DEFAULT GBL:  -10. -1.2
+;                         (note, original paper had 1.2 for the octopole
+;                           so this is not an exact reproduction
+;                           for now we are going to insist on same sign G1, G3 for GBL normalization
+;                           because this introduces additional null at equator instead of pole)
+;                       FOR TESTING ONLY -- uncomment further down where gamma1,gamma3,bpar set
+;                         also in gibbaglow.pro where NORM1, NORM3 are set
+;                         DEFAULT Low 1986: 45*b*b, -4
+;                         (note, original paper had 3*b*b,4 - we believe this was a typo)
+;                         (also note, to reproduce in normalization of GBL, use gamma1=45, gamma3=360)
+;
+; VSCALE - scale for radial velocity profile along the open field (varies with height)
+;                           UNITS KM/SEC
+;                           DEFAULT 0.d0
+;
+;
+; HYDRO, CDENSPROF, ODENSPROF, CT0, OT0:
+;  how to handle the plasma throughout the corona.
+;       DEFAULT HYDRO 4
+;               Vasquez 2003
+;
+;       FOR CDENSPROF, ODENSPROF, CTO, OT0 DEFAULTS SEE BELOW
+
+;
+;  HYDRO: hydrostatic atmospheric models
+;
+;    CALLED by models (within [model]*prams.pro):
+;
+;       The options are:
+;             HYDRO=0 - zero density
+;               not allowed for DIPOLE, GIBBAGLOW, or PFSSMOD --  replaced with hydro=3
+;             HYDRO=1; exponential isothermal hydrostatic equilibrium
+;             HYDRO=2; radial power law hydrostatic equilibrium
+;             HYDRO=3; Vasquez et al 2003 density, electron temperature
+;                       DEFAULT
+;             HYDRO=4; Cranmer et al 1999 empirical model for coronal hole density, temperature
+;               only allowed for open field profiles
+;               if set, any closed fields will revert to HYDRO=3 representation
+;             HYDRO=5; simpler version of HYDRO=2, with only one radial power law (for far field)
+;             HYDRO > 5 --> HYDRO=3
+;
+; KEYWORDS SET IN FOR_HYDRODEFAULTS
+;
+;  CDENSPROF,ODENSPROF -
+;       HYDRO=0, CDENSPROF,ODENSPROF not used, set to 'NULL' and won't show up in widget
+;       HYDRO=1, CDENSPROF, ODENSPROF represent density at coronal base in CGS units,
+;               CDENSPROF scaled by 1d9
+;               ODENSPROF scaled by 1d8
+;       HYDRO=2, CDENSPROF, ODENSPROF can be input array [A,B,C,D,E,F] (units in cgs)
+;               or multipliers of array [densprof*A,B,densprof*C,D,densprof*E,F]
+;                     (note for widget it has to be multiplier, so, scalar)
+;               closed field array defaults to values of Gibson et al 1999 WSM streamer
+;               open field array defaults to values of Guhathakurta et al 1999 WSM c. hole
+;               dens = A*r^-B + C*r^-D + E*r^-F
+;       HYDRO=3, CDENSPROF,ODENSPROF can be array [A1,A2,A3,A4,A5,aa,bb,alpha,beta]
+;              or multipliers of A1
+;              closed field array defaults to Vasquez/Sittler-Guhathakurta streamer values
+;              open field array defaults to Vasquez/Sittler-Guhathakurta polar
+;              dens=A1*exp(A2/r)*r^-2*(1+A3/r+A4/r^2+A5/r^3)
+;       HYDRO=4,ODENSPROF can be array [da,db,dc,dd,de,ta,tb,tc,td]
+;              or multipliers of da
+;              open field array defaults to Cranmer coronal hole values
+;              dens_he= da*1e5*(db*(1./r)^dc + dd*(1./r)^de)
+;               (for HYDRO=4 CDENSPROF set to 'NULL' and for_hydrodefaults will
+;                          be called twice, the second time with HYDRO=3)
+;       HYDRO=5, ODENSPROF CDENSPROF are density at coronal base
+;              density=densprof*1d7r^T0
+;
+;        DEFAULT CDENSPROF=1 (CDENSPROF=6 for HYDRO=5)
+;        DEFAULT ODENSPROF=1
+;
+;  CT0, OTO
+;      HYDRO=0,1, isothermal temperature parameter value
+;      HYDRO=2 -- not used set to null and not shown in widget
+;               (temperature follows from density profile, ideal gas law, hydrostatic pressure balance)
+;      HYDRO=3 scaling factor for model, divided by 1.5d6, and uses parameters in DENSPROF
+;              temp=T0*(8e5/1.5e6)*(aa+1)/(aa+bb*r^alpha + (1-bb)*r^-beta)
+;               (normalized to 1.5e6 so same T0 default can be used as other HYDRO choices)
+;      HYDRO=4 scaling factor for model, divided by 1.5d6, and uses parameters in DENSPROF
+;              temp_he= T0*(1e6/1.5e6)*(ta*r^tb + tc*r^td)^(-1)
+;               (normalized to 1.5e6 so same T0 default can be used as other HYDRO choices)
+;                       (for HYDRO=4 CTO set to 'NULL'and for_hydrodefaults will
+;                          be called twice, the second time with HYDRO=3)
+;        DEFAULT CTO 1.5D6
+;        DEFAULT OTO 1.D6
+;               (except for HYDRO=3 -- DEFAULT OTO 1.5D6)
+;      HYDRO=5 -- defines slope of radial falloff; designed for far field falloff
+;               (temperature follows from density profile, ideal gas law, hydrostatic pressure balance)
+;        DEFAULT CTO =-4 OTO=-2
+

@@ -1,0 +1,8 @@
+C  IMPLICIT DOUBLE PRECISION DECLARATION
+C       IMPLICIT REAL (A-H,O-Z)
+C        IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C Note - we tried uncommenting IMPLICIT REAL and got same results
+C but IMPLICIT DOUBLE introduced a spurious bright signal
+C so turned back off
+C December 2013 SG and RC

@@ -1,0 +1,28 @@
+Hi Phil,
+
+Coming in a second email is a 252 Meg file containing the model grid.
+
+The first line of the file contains two numbers: first is number of
+points of each line of sight, second is number of plane-of-sky points.
+
+The remaining lines were made in a nested do loop, with the inner loop
+looping through the line of sight points and the outer loop looping
+over the plane-of-sky locations. 
+
+Each of these lines contains: 
+ r, theta, phi, density, temperature, B_r, B_theta, B_phi, velocity (scalar).
+
+openw,lun,'OBSERVABLES/COMP/compcube.dat',/f77_unformatted,/get_lun
+writeu,lun,LosPramsStruct.Nlos,nunwrap
+ for j = 0,nunwrap-1 do begin
+
+    for i = 0,LosPramsStruct.NLos-1 do begin
+         writeu,lun,r3D(i,j),theta3D(i,j),phi3D(i,j),ModSolStruct.Dens(i,j),ModSolStruct.Temp(i,j),$
+         ModSolStruct.Br(i,j),ModSolStruct.Bth(i,j),ModSolStruct.Bph(i,j),ModSolStruct.Vel(i,j)
+    endfor
+endfor
+free_lun,lun
+
+James Dove, Ph.D
+Dept. of Physics, MSCD
+(303)556-2667

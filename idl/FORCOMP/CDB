@@ -1,0 +1,4 @@
+C
+C note this was new in Phils 6jul22 distribution - not sure what for
+      COMMON /CDB/ 
+

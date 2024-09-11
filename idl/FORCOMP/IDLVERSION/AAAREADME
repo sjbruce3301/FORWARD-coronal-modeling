@@ -1,0 +1,72 @@
+
+17 October 2013
+
+IDL cle variables and common blocks and other things....
+
+The code is written such that the needed variables are stored in common
+blocks instead of variables passed in the arguments of functions and procedures.
+
+The following include files are placed in the opening lines of various
+procedures as needed to make sure the common block variables are
+available:
+
+include.icle
+
+	contains the two structures:
+		  param   The tags are defined in for_param_icle.pro, they remain fixed.
+		  const    The tags are defined in for_const_icle.pro, they remain fixed/
+
+
+include.icle.atom
+
+	contains the structures:
+		 atom
+		 lvl
+		 trn
+		 col
+        The procedure for_atom.pro fills the variables within all these structures, by reading
+	the file ATOM.  For example, atom.nk is the actual number of levels used in the atom.
+
+include.icle.corona
+
+	contains just common block variables (NOT structures)
+	such as temp (electron temperature), ed (electron density), plasma line of sight
+	velocity (vel), magnetic field
+
+	the procedure for_corona.pro fills these numbers but also passes these via the argument
+	list in differently named variables
+
+include.icle.cse
+
+	contains the structure cse with tags such as rho, scoeff, aj, weight used in the statistical
+	equilibrium calculations
+
+	procedure for_atom1.pro defines these variables.    The variable cse.rho are solved for 
+
+include.icle.emerge
+
+	contains structure emerge with tags emiss and emerge
+
+	iclestart.pro defines these variables, they are written by for_emission.pro after the solution
+	vector rho is computed
+
+include.icle.grid
+
+NOT USED AT ALL
+
+include.icle.input
+
+	contains a structure of input parameters, input with tags like wlmin, tp2te.
+	These are the same as the original fortran code, for compatibility reasons.
+	Easy to change and probably should be.
+
+	values are set by for_rinput.pro by reading the file INPUT
+
+
+include.icle.thermal
+
+	contains common block variables pstar,p,c,cmm, which are populations and collision rates
+
+	initialized to zero in for_atom.pro and computed from thermal parameters in for_colcal.  
+	variable p (for population) is in fact not used anywhere.
+

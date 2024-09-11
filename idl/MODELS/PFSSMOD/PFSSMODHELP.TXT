@@ -1,0 +1,185 @@
+;+
+;Name:
+;   PFSSMOD
+;
+; ACKNOWLEDGEMENT: "M. de Rosa SolarSoft potential field implementation"
+;  if you use hydro model  -- choices are:
+;	HYDRO=2 
+;		Gibson et al., JGR, 104, 9691, 1999 [closed field]
+;		Guhathakurta et al., JGR, 104, 9801, 1999 [open field]
+;	HYDRO=3
+;		Vasquez et al., ApJ, 598, 1361, 2003
+;	HYDRO=4
+;		Cranmer et al., ApJ, 511, 481, 1999 [open field]
+;		Vasquez et al., ApJ, 598, 1361, 2003 [closed field]
+;
+;Purpose:
+;          To set up the structure containing the information needed
+;          to run a pfss in the forward model. To  be
+;          called by the driver routine, and the resulting structure
+;          will be named ModPramsStruct
+;
+;Keyword inputs:
+;
+;  PFSSFILE: Filename (inluding extention) of the save file you want to
+;            look at  This can be gotten with the pfss_viewer SSWIDL
+;            command, or by setting DATE and then later referring to
+;            saved file. You have to have the pfss package installed in
+;            SSWIDL. Default is set to file in $FORWARD_DB$ directory.
+;               Inputted as a string.
+;               PFSSFILE OVERWRITES RTOP and DATE AND TOPOLOGY IF SET and DIFFERENT.
+;               BE CAREFUL FOR EXAMPLE IF YOU WANT CMER AND BANGLE TO BE FOR
+;               A SOMEWHAT DIFFERENT DATE THAN THE ONE IN THE CUBE - in this
+;               case, you should explicitly define CMER, and BANG as keywords
+;               In other words -- if you use keyword PFSSFILE, DATE will
+;               be completely ignored and actually replaced by NOW in PFSSFILE.
+;               Note widget should not send PFSSFILE explicitly, that is,
+;               for most calls it will send date but not pfssfile;
+;               unless pfssfile as a file is selected via the widget
+;               or if READPRAMS is set it will use that PFSSFILE
+;               (if there is one; generally, it will not be saved in READPRAMS
+;               unless it is an original keyword)
+;
+;  DATE: if this is set,  it will look for datacube
+;       for this date (or close to it). If not in WORKING_DIR (or local if WORKING_DIR not
+;       set) will download.  If PFSSFILE set, it will overrule and overwrite DATE.
+;
+; **TO SUMMARIZE ** there are three different potential observer point of view inputs
+;
+;       1) CMER/BANG - if these are set as keywords, they take precedence and
+;               *define* the observer's point of view
+;               These keywords are not defined or used in this subroutine, however.
+;
+;       2) PFSSFILE - if explicitly set, this will be the datacube used
+;               for the PFSS model-- the date associated with it (NOW) is
+;               the date the boundary condition is centered on. This will
+;               overwrite/replace DATE even if it is explicitly set, and will define
+;               CMER/BANG if they are *not* explicitly set in the function call
+;                 (note, if PFSSFILE is changed in the widget, CMER/BANG will be updated)
+;
+;       3) DATE - if this is the only thing set, it will define CMER/BANG
+;               as the Earth's view on that date;
+;               also PFSSFILE as described above.
+;                 (note, if DATE is changed in the widget, CMER/BANG and PFSSFILE
+;                    will be updated)
+;
+; *So, for example, one might want to know what STEREO saw on a particular day and time:
+;       one would set DATE to that day and time, CMER and BANG to STEREO's view for that day and
+;       time, and then PFSSFILE would be a close-by time (but not exactly the same as DATE)
+;       that represented the time of the boundary condition.
+;       The DATE itself would not have a huge impact on the result, except to the extent that
+;       some issues of instrument calibration have a dependency on DATE, and of course in
+;       picking the PFSSFILE to use.
+;
+;       The FORWARD plot will indicate all three of these points of view in the plot title,
+;       via  "PFSS Cube" (NOW; the boundary condition date associated with PFSSFILE),
+;       "observer's date" (DATEUSE; will be DATE as set UNLESS the data cube doesn't exist and revert to 2005 default)
+;       and then explicit CMER + BANG (either set by user or determined from DATE)
+;          note FORWARD variable DATE will be set to DATEUSE at bottom of file
+;          and there are print commands just before this that can be uncommented to track a change, e.g. to default
+;
+;  WORKING_DIR: see above
+;
+;  RTOP: the location of the pfss source surface. it defaults to 2.5
+;       and only can be something different if you specify a DATE
+;       and no PFSSFILE, or if it is different in the PFSSFILE
+;       from 2.5
+;       NOTE: if set to negative -- will use abs. value for cube top,
+;               but, will call PFSS_GET_POTL_COEFFS with no RTOP which forces
+;               source surface at infinity
+;
+;  VELIMPOSE - impose a velocity of constant magnitude VELIMPOSE directed along the field
+;               overwrites any velocity field already loaded in if nonzero
+;               UNITS KM/SEC
+;                       DEFAULT 0.d0
+;
+
+  TOPOLOGY - preprocess PFSS datacube by drawing field lines through every point
+;               takes a while, but allows storage of information about closed vs open
+;               which then allows different hydrostatic models on each
+;               also stores info needed for quick calculation of expansion factor (line=EXPFAC)
+;            it defaults to 0 and only can be something different if you specify a DATE
+;            and no PFSSFILE, or if it is different in the PFSSFILE from 0
+;               If PFSSFILE set, it will overrule TOPOLOGY
+;
+;  DELTAR - step for radial derivative (e.g. LINE=NINST)
+;                       DEFAULT 0.01d0
+;
+;  RINDEX - array of r values for custom grid -- only used if rtop ne 2.5
+;                       also only usable with command line (not widget)
+;               DEFAULT UNSET
+;
+; HYDRO, DENSPROF, ODENSPROF, T0, OT0:
+;  how to handle the plasma and (if TOPOLOGY set)in closed vs open regions
+;       DEFAULT HYDRO 3
+;               Vasquez 2003
+;       FOR DEFAULTS SEE BELOW
+;          (note that DENSPROF/T0 is treated as CDENSPROF/CT0)
+
+;
+;  HYDRO: hydrostatic atmospheric models
+;
+;    CALLED by models (within [model]*prams.pro):
+;
+;       The options are:
+;             HYDRO=0 - zero density
+;               not allowed for MYDIPOLE, GIBBAGLOW, or PFSSMOD --  replaced with hydro=3
+;             HYDRO=1; exponential isothermal hydrostatic equilibrium
+;             HYDRO=2; radial power law hydrostatic equilibrium
+;             HYDRO=3; Vasquez et al 2003 density, electron temperature
+;                       DEFAULT
+;             HYDRO=4; Cranmer et al 1999 empirical model for coronal hole density, temperature
+;               only allowed for open field profiles
+;               if set, any closed fields will revert to HYDRO=3 representation
+;             HYDRO=5; simpler version of HYDRO=2, with only one radial power law (for far field)
+;             HYDRO > 5 --> HYDRO=3
+;
+; KEYWORDS SET IN FOR_HYDRODEFAULTS
+;
+;  CDENSPROF,ODENSPROF -
+;       HYDRO=0, CDENSPROF,ODENSPROF not used, set to 'NULL' and won't show up in widget
+;       HYDRO=1, CDENSPROF, ODENSPROF represent density at coronal base in CGS units,
+;               CDENSPROF scaled by 1d9
+;               ODENSPROF scaled by 1d8
+;       HYDRO=2, CDENSPROF, ODENSPROF can be input array [A,B,C,D,E,F] (units in cgs)
+;               or multipliers of array [densprof*A,B,densprof*C,D,densprof*E,F]
+;                     (note for widget it has to be multiplier, so, scalar)
+;               closed field array defaults to values of Gibson et al 1999 WSM streamer
+;               open field array defaults to values of Guhathakurta et al 1999 WSM c. hole
+;               dens = A*r^-B + C*r^-D + E*r^-F
+;       HYDRO=3, CDENSPROF,ODENSPROF can be array [A1,A2,A3,A4,A5,aa,bb,alpha,beta]
+;              or multipliers of A1
+;              closed field array defaults to Vasquez/Sittler-Guhathakurta streamer values
+;              open field array defaults to Vasquez/Sittler-Guhathakurta polar
+;              dens=A1*exp(A2/r)*r^-2*(1+A3/r+A4/r^2+A5/r^3)
+;       HYDRO=4,ODENSPROF can be array [da,db,dc,dd,de,ta,tb,tc,td]
+;              or multipliers of da
+;              open field array defaults to Cranmer coronal hole values
+;              dens_he= da*1e5*(db*(1./r)^dc + dd*(1./r)^de)
+;               (for HYDRO=4 CDENSPROF set to 'NULL' and for_hydrodefaults will
+;                          be called twice, the second time with HYDRO=3)
+;       HYDRO=5, ODENSPROF CDENSPROF are density at coronal base
+;              density=densprof*1d7r^T0
+;
+;        DEFAULT CDENSPROF=1 (CDENSPROF=6 for HYDRO=5)
+;        DEFAULT ODENSPROF=1
+;
+;  CT0, OTO
+;      HYDRO=0,1, isothermal temperature parameter value
+;      HYDRO=2 -- not used set to null and not shown in widget
+;               (temperature follows from density profile, ideal gas law, hydrostatic pressure balance)
+;      HYDRO=3 scaling factor for model, divided by 1.5d6, and uses parameters in DENSPROF
+;              temp=T0*(8e5/1.5e6)*(aa+1)/(aa+bb*r^alpha + (1-bb)*r^-beta)
+;               (normalized to 1.5e6 so same T0 default can be used as other HYDRO choices)
+;      HYDRO=4 scaling factor for model, divided by 1.5d6, and uses parameters in DENSPROF
+;              temp_he= T0*(1e6/1.5e6)*(ta*r^tb + tc*r^td)^(-1)
+;               (normalized to 1.5e6 so same T0 default can be used as other HYDRO choices)
+;                       (for HYDRO=4 CTO set to 'NULL'and for_hydrodefaults will
+;                          be called twice, the second time with HYDRO=3)
+;        DEFAULT CTO 1.5D6
+;        DEFAULT OTO 1.D6
+;               (except for HYDRO=3 -- DEFAULT OTO 1.5D6)
+;      HYDRO=5 -- defines slope of radial falloff; designed for far field falloff
+;               (temperature follows from density profile, ideal gas law, hydrostatic pressure balance)
+;        DEFAULT CTO =-4 OTO=-2
+

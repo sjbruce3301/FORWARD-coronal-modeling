@@ -1,0 +1,24 @@
+* written by atomwr on Wed Mar 15 09:27:00 2006
+* includes modified collision strength to account for 
+* effects of missing levels in intensity.
+SI
+* abnd  awgt
+    7.52   28.09
+* nk,nline,ncont,nrfix
+        2        1        0        0
+*       E cm-1    g   label                        ion  S   L   J   P  Lande G
+         0.000  2.00  '      SI X 2S2 2P 2PO 1/2'  10 0.5 1.0 0.5 1  6.6589e-01
+      6990.000  4.00  '      SI X 2S2 2P 2PO 3/2'  10 0.5 1.0 1.5 1  1.3341e+00
+*   SI X 2S2 2P 2PO 3/2   SI X 2S2 2P 2PO 1/2        14302.231
+   2   1 1.822e-07  30 100.0  10.0  0   2.97e+00  0.00e+00  0.00e+00
+* WRITTEN BY COLWR ON Wed Mar 15 09:27:00 2006
+* ATOM IS    SI
+GENCOL
+TEMP
+13 3.16228e+04 5.62341e+04 1.00000e+05 1.77828e+05 3.16228e+05
+ 5.62341e+05 1.00000e+06 1.77828e+06 3.16228e+06 5.62341e+06
+ 1.00000e+07 1.77828e+07 3.16228e+07
+OHM
+   1   2   3.18e+00 3.00e+00 2.56e+00 2.22e+00 1.82e+00 1.38e+00 9.90e-01
+ 6.84e-01 4.72e-01 3.40e-01 2.60e-01 2.14e-01 1.88e-01
+END

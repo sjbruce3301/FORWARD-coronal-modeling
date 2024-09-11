@@ -1,0 +1,38 @@
+;************************************************************************
+;
+;
+;
+;Name: pointvalprams
+;
+;Purpose: Arbitrary definition of physical state at a point
+;
+;;Keyword Inputs:
+;
+;         PHYSICAL STATE PARAMERERS
+;                BRVAL
+;                BTHVAL
+;                BPHVAL
+;                DENSVAL
+;                TEMPVAL
+;
+;       BOOKKEEPING
+;
+;               SAVEPRAMS - if keyword set, write parameters to filename
+;                       (which is the keyword value saveprams)
+;                       or if set to 1, then return pramarray
+;
+;               READPRAMS - if keyword set, read in parameters from filename
+;                       (which is the keyword value filename)
+;                       or if a structure than read directly
+;
+;
+;;ModPramsStruct Outputs:
+;
+;               All of the above, also
+;
+;               NAME -- pointval-- so that procedure can be called in intensint
+;               LABEL -- Point Evaluation -- for plot label
+;
+;Output: outarray - structure containing keyword output model parameters
+;
+

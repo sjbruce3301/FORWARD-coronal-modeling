@@ -1,0 +1,63 @@
+C
+C**********************************************************************
+C
+C FUNCTION NEEDED FOR EQ. (10) OF ZHANG AND LOW.
+C
+	FUNCTION ZLF(R,TH,A0,X)
+C
+	st=sin(th)
+	cp=sqrt(1.-X*X)
+	ZLF = 1./SQRT(A0*A0+R*R-2.*A0*R*ST*CP)
+        ZLF=ZLF - 1./SQRT(A0*A0+R*R+2.*A0*R*ST*CP)
+C IMAGE
+	ZLFI = 1./SQRT(A0*A0*R*R+1.-2.*A0*R*ST*CP)
+        ZLFI=ZLFI-1./SQRT(A0*A0*R*R+1.+2.*A0*R*ST*CP)
+C FUNCTION MINUS IMAGE
+	ZLF=ZLF-ZLFI
+	RETURN
+	END
+C
+C**********************************************************************
+C
+      FUNCTION QZLF(R,TH,A0)
+      REAL A,B,SS,QZLF
+      INTEGER J
+      REAL DX,XM,XR,W(5),X(5)
+      SAVE W,X
+      DATA W/.2955242247,.2692667193,.2190863625,.1494513491,
+     *.0666713443/
+      DATA X/.1488743389,.4333953941,.6794095682,.8650633666,
+     *.9739065285/
+      A=0.0
+      B=1.0
+      XM=0.5*(B+A)
+      XR=0.5*(B-A)
+      SS=0.
+      DO 11 J=1,5
+        DX=XR*X(J)
+        SS=SS+W(J)*(ZLF(R,TH,A0,XM+DX)+ZLF(R,TH,A0,XM-DX))
+11    CONTINUE
+      QZLF=XR*SS
+      RETURN
+      END
+C
+C**********************************************************************
+C
+      FUNCTION QTRAP(R,TH,A0)
+      npts=99
+      A=0.0
+      B=1.0
+      w=1./float(npts)
+      SS=0.
+      dx=(b-a)/float(npts)
+      x=dx/2.
+      ss=w/2.*zlf(r,th,a0,x)
+      DO 11 J=2,npts-1
+	 x=x+dx
+	 SS=SS+W*ZLF(R,TH,A0,X)
+11    CONTINUE
+      x=x+sx
+      ss=ss+w/2.*zlf(r,th,a0,x)
+      QTRAP=SS
+      RETURN
+      END

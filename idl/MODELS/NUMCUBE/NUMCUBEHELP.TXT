@@ -1,0 +1,191 @@
+;Name:
+;   NUMCUBE
+;
+; Acknowledgements:
+;
+; 
+;  if you use hydro model  -- choices are:
+;       HYDRO=2 
+;               Gibson et al., JGR, 104, 9691, 1999 [closed field]
+;               Guhathakurta et al., JGR, 104, 9801, 1999 [open field]
+;       HYDRO=3
+;               Vasquez et al., ApJ, 598, 1361, 2003
+;       HYDRO=4
+;               Cranmer et al., ApJ, 511, 481, 1999 [open field]
+;               Vasquez et al., ApJ, 598, 1361, 2003 [closed field]
+;
+;Purpose:
+;          To set up the structure containing the information needed
+;          to run a data cube interpolation. This procedure is to  be
+;          called by the driver routine with keyword inputs that
+;          with resulting structure OUTARRAY assigned to ModPramsStruct
+;          (with ModPramsStruct.name='numcube')
+;
+;Keyword inputs:
+;
+;  CUBENAME: Filename (inluding extention and path) of the numerical datacube
+;            you want to look at. File must be in the correct format,
+;            use make_my_cube.pro in this directory to convert your
+;            cube.
+;
+;  BOUT: how to handle the magnetic field ouside the
+;        cube. The options are:
+;
+;             BOUT=1; no magnetic field outside the cube (DEFAULT)
+;             BOUT=2; radial open field. default strength.
+;                    Changes sign at equator.
+;                       note that
+;                     there will probably be a discontionuity at the
+;                     edge of the cube.
+;             BOUT=3; dipole field. default strength. note that
+;                     there will probably be a discontionuity at the
+;                     edge of the cube.
+;
+;  BNORM: magnitude of external field for BOUT = 2 or 3
+;                       DEFAULT 10 Gauss
+;
+;   NOFIELD - turn off magnetic field in simulation
+;               *OR if not 0 or 1, can act as a multiplier on field
+;            DEFAULT 0 (model field)
+;
+;  VELIMPOSE - impose a velocity of constant magnitude VELIMPOSE directed along the field
+;               overwrites any velocity field already loaded in if nonzero
+;                       DEFAULT 0.d0
+;
+;  DTHRES    - DOUBLE  : Identify POP2 coronal points that are dense and can be treated
+;                       as different population
+;                        If unset or set to 0, will be ignored; if set to non-zero
+;                        will be interpreted as density above which points are
+;                        designated population 2.  (If set to 1 will default to 5d8 cgs)
+;                        This will result in creation of POP2DENS zeroed everywhere except
+;                        D>THRESD - this will be set up in NUMCUBE.PRO
+;                        This will overwrite any POP2DENS tag already in CUBE.
+;                        Note if COLDPTS also set, DTHRES will be ignored.
+;                        DEFAULT 0
+;  COLDPTS     - DOUBLE  : Identify points that are cold as different population
+;                        If unset or set to 0, will be ignored; if set to non-zero
+;                        will be interpreted as temperature below which points are
+;                        designated population 2.  (If set to 1 will default to 3d4 K)
+;                        This will result in creation of POP2DENS zeroed everywhere except
+;                        T<COLDPTS - this will be set up in NUMCUBE.PRO
+;                        This will overwrite any POP2DENS tag already in CUBE.
+;                        DEFAULT 0
+;
+; P2FILL   - DOUBLE :  A single number between 0 and 1 to multiply population 2 density by
+;                       so that POP2FILLINGFACTOR=P2FILL in POP2 voxels, and 0 elsewhere, and
+;                       FILLINGFACTOR=1-P2FILL in POP2 voxels, and 1 elsewhere.
+;                       Will overwrite any FILLINGFACTOR and/or POP2FILLINGFACTOR tag on CUBE.
+;                       Note if there is no POP2DENS or POP2TEMP in cube and both COLDPTS and DTHRES
+;                       are not set, P2FILL will be ignored if set to anything other than default
+;                       DEFAULT 1.d0
+;
+;  DELTAR - step for radial derivative (e.g. LINE=NINST)
+;                       DEFAULT 0.01d0
+;
+;  CUBEROT: Rotation angle in degrees. Amount the numerical datacube is to be
+;        rotated around the radial direction in a counterclockwise manner. The
+;        cube is centered at longitude zero at the equator.(The
+;        default viewing position for a plane-of-sky map set in
+;        for_get_grid is -90, so that model structures centered on
+;        longitude zero appear at the West limb) The z-axis points
+;        north-south.
+;        Won't work on global or axisymmetric data sets, but will work with
+;        datasets that are only a subset of lat/lon where outside is
+;        filled in by defaults (see below).
+;        DEFAULT 0
+;
+;  GETMAS - only used when called via PSIMAS programs
+;               forces run of MAKEMASCUBE based on inputted date
+;
+;  MHEAT - only used when called via PSIMAS programs
+;               defineds MAS heating, magnetic boundary
+;               MHEAT within CUBENAME will overwrite any input
+;
+;  MAGMOD: Indicates numerical model contains magnetic fields.  Default yes (1).
+;
+;
+; HYDRO, DENSPROF, CDENSPROF, ODENSPROF, TE/T0, CT0, OT0:
+;  how to handle the plasma outside the box and (if TOPOLOGY set within datacube)
+;       in closed vs open regions
+;       DEFAULT HYDRO 3 in closed vs open, HYDRO 0 outside the box
+;		(outside the box is treated as open field HYDRO profiles)
+;               Vasquez 2003
+;       FOR DEFAULTS SEE BELOW
+;          (note that DENSPROF/ODENSPROF are treated the same)
+
+;
+;  HYDRO: hydrostatic atmospheric models
+;
+;    CALLED by models (within [model]*prams.pro):
+;       CROISSANT (for spherically symmetric open field background)
+;       MYDIPOLE (for both open and closed field)
+;       GIBBAGLOW (for both open and closed field)
+;       NUMCUBE (for spherically symmetric open field background "outside the box",
+;         and/or if keyword TOPOLOGY set, to set open vs closed field density profiles)
+;       PFSSMOD (for spherically symmetric open field density,
+;         or if keyword TOPOLOGY set, to set open vs closed field density profiles)
+;       PSIMAS (for open field background "outside the box")
+;
+;       The options are:
+;	      HYDRO=-1 -- continues density as r^-2 below/above box
+;             HYDRO=0 - zero density
+;               not allowed for MYDIPOLE, GIBBAGLOW, or PFSSMOD --  replaced with hydro=3
+;             HYDRO=1; exponential isothermal hydrostatic equilibrium
+;             HYDRO=2; radial power law hydrostatic equilibrium
+;             HYDRO=3; Vasquez et al 2003 density, electron temperature
+;                       DEFAULT
+;             HYDRO=4; Cranmer et al 1999 empirical model for coronal hole density, temperature
+;               only allowed for open field profiles
+;               if set, any closed fields will revert to HYDRO=3 representation
+;             HYDRO=5; simpler version of HYDRO=2, with only one radial power law (for far field)
+;             HYDRO > 5 --> HYDRO=3
+;
+; KEYWORDS SET IN FOR_HYDRODEFAULTS
+;
+;  CDENSPROF,ODENSPROF -
+;       HYDRO=0, CDENSPROF,ODENSPROF not used, set to 'NULL' and won't show up in widget
+;       HYDRO=1, CDENSPROF, ODENSPROF represent density at coronal base in CGS units,
+;               CDENSPROF scaled by 1d9
+;               ODENSPROF scaled by 1d8
+;       HYDRO=2, CDENSPROF, ODENSPROF can be input array [A,B,C,D,E,F] (units in cgs)
+;               or multipliers of array [densprof*A,B,densprof*C,D,densprof*E,F]
+;                     (note for widget it has to be multiplier, so, scalar)
+;               closed field array defaults to values of Gibson et al 1999 WSM streamer
+;               open field array defaults to values of Guhathakurta et al 1999 WSM c. hole
+;               dens = A*r^-B + C*r^-D + E*r^-F
+;       HYDRO=3, CDENSPROF,ODENSPROF can be array [A1,A2,A3,A4,A5,aa,bb,alpha,beta]
+;              or multipliers of A1
+;              closed field array defaults to Vasquez/Sittler-Guhathakurta streamer values
+;              open field array defaults to Vasquez/Sittler-Guhathakurta polar
+;              dens=A1*exp(A2/r)*r^-2*(1+A3/r+A4/r^2+A5/r^3)
+;       HYDRO=4,ODENSPROF can be array [da,db,dc,dd,de,ta,tb,tc,td]
+;              or multipliers of da
+;              open field array defaults to Cranmer coronal hole values
+;              dens_he= da*1e5*(db*(1./r)^dc + dd*(1./r)^de)
+;               (for HYDRO=4 CDENSPROF set to 'NULL' and for_hydrodefaults will
+;                          be called twice, the second time with HYDRO=3)
+;       HYDRO=5, ODENSPROF CDENSPROF are density at coronal base
+;              density=densprof*1d7r^T0
+;
+;        DEFAULT CDENSPROF=1 (CDENSPROF=6 for HYDRO=5)
+;        DEFAULT ODENSPROF=1
+;
+;  CT0, OTO
+;      HYDRO=0,1, isothermal temperature parameter value
+;      HYDRO=2 -- not used set to null and not shown in widget
+;               (temperature follows from density profile, ideal gas law, hydrostatic pressure balance)
+;      HYDRO=3 scaling factor for model, divided by 1.5d6, and uses parameters in DENSPROF
+;              temp=T0*(8e5/1.5e6)*(aa+1)/(aa+bb*r^alpha + (1-bb)*r^-beta)
+;               (normalized to 1.5e6 so same T0 default can be used as other HYDRO choices)
+;      HYDRO=4 scaling factor for model, divided by 1.5d6, and uses parameters in DENSPROF
+;              temp_he= T0*(1e6/1.5e6)*(ta*r^tb + tc*r^td)^(-1)
+;               (normalized to 1.5e6 so same T0 default can be used as other HYDRO choices)
+;                       (for HYDRO=4 CTO set to 'NULL'and for_hydrodefaults will
+;                          be called twice, the second time with HYDRO=3)
+;        DEFAULT CTO 1.5D6
+;        DEFAULT OTO 1.D6
+;               (except for HYDRO=3 -- DEFAULT OTO 1.5D6)
+;      HYDRO=5 -- defines slope of radial falloff; designed for far field falloff
+;               (temperature follows from density profile, ideal gas law, hydrostatic pressure balance)
+;        DEFAULT CTO =-4 OTO=-2
+

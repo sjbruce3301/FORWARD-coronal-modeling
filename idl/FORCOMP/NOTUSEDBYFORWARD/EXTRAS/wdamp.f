@@ -1,0 +1,46 @@
+C
+C PURPOSE:  WRITES DAMPING PARAMETERS TO OUTPUT LISTING
+C
+C INPUTS:
+C
+C OUTPUTS:
+C
+C COMMON:
+C
+C COMMENTS: OCTOBER 6, 1999, P. JUDGE
+C 
+      SUBROUTINE WDAMP(KR,DDP,GAMMA,GR,GV,GS)
+C
+C 
+C
+      INCLUDE 'PREC'
+      INCLUDE 'PARAM'
+      INCLUDE 'CATOM'
+      INCLUDE 'CATMOS'
+      INCLUDE 'CINPUT'
+      INCLUDE 'CLU'
+C
+      IF(IWDAMP.EQ.0) RETURN
+C
+      IF(KR .EQ. 1) WRITE(LOUT,100) 
+ 100  FORMAT(/' DOPPLER WIDTH, ADAMP AND CONTRIBUTIONS TO ADAMP',
+     *     ' IN PERCENT '/'  KR      LAMBDA     DNYD',3X,'J  I',
+     *     3X,'DNYD',4X,
+     *     'ADAMP',5X,'RAD',5X,'VW',5X,'STARK'/10X,'A',
+     *     9X,'KM/S',10X,'MA')
+      J=JRAD(KR)
+      I=IRAD(KR)
+      IF(GAMMA.GT.0.0) THEN
+         GAM=GAMMA
+      ELSE
+         GAM=1.0
+      ENDIF
+      WRITE(LOUT,200) KR, CONVL(ALAMB(KR)),
+     *     DNYD*QNORM,J,I,DDP,ADAMP(KR),GR/GAM,
+     *     GV/GAM,GS/GAM
+ 200     FORMAT(1X,I3,1X,F13.2,1X,F7.3,2I3,F8.3,1P,E10.3,2P,3F8.3)
+      RETURN
+      END
+C
+C***********************************************************************
+C

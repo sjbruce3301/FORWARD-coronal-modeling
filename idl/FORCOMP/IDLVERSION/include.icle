@@ -1,0 +1,10 @@
+;
+;  these are structures containing parameters and constants used by ICLE
+;  that are accessible through a common block:
+;
+common icle, param, const  
+;
+;  these are density matrix (diagonal), various others used 
+;  moved to different include file
+;  common icle1,rho, scoeff, e, aj, ecoeff, radj, weight
+;

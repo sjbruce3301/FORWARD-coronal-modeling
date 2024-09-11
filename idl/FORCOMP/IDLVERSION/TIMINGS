@@ -1,0 +1,9 @@
+
+
+Radiative code only.  
+
+IDL          t=4.36E-3 sec per cell
+pg fortran   t=7.34E-5 sec per cell
+
+factor 60 slower.
+

@@ -1,0 +1,1 @@
+This model is a variation on Gibson et al, 2003, which is a 3D morphological model of coronal streamers embedded in spherically symmetric background.  This model extends the previous one to include cavity "tunnels" embedded in th streamers.

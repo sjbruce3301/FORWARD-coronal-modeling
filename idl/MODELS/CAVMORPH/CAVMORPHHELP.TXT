@@ -1,0 +1,241 @@
+;**********************************************************************
+;+
+;+
+;Name: CAVMORPH
+;
+; REFERENCE: Gibson, S. E. et al., ApJ, 724, 1133, 2010
+;
+;Purpose:  Global sun with streamer and cavity
+;               morphological model (not a physical solution)
+;               specifies a density and temperature distribution in 3D
+;               that can be fit to observables
+;
+; Keyword Inputs:
+;
+;      NOTE: * indicates directly measurable from observations, no fit required
+;
+;
+;       MORPHOLOGY STREAMER
+;
+;               **THCS - Streamer central colatitude (DEGREES)
+;                               NO LONGER POLAR ANGLE BECAUSE NOW WE HAVE PHCS
+;                               Also defined for cavity in EGGS program as intersection
+;                               of ellipse axis closest to radial (not necessarily semi-major axis)
+;                               with limb.
+;                               Can also be thought of as drawing a line of symmetry down from
+;                               the cavity/streamer center top to the photosphere.
+;                               Note-- this IS distinct from thetao in forward codes.
+;                               Changing it effectively shifts the structure but
+;                               keeps the m slope the same (thus, an equatorial
+;                               streamer belt becomes an equatorially parallel
+;                               higher-latitude streamer belt).  Changing
+;                               thetao introduces the interesting possibility of having
+;                               a streamer aligned along a great circle other than the equator.
+;                               DEFAULT 90 DEGREES (equator)
+;
+;               **PHCS -- Streamer central longitude (DEGREES)
+;                               DEFAULT 0 DEGREES (Central Meridian)
+;
+;               **MANG - the angle the streamer neutral line makes to equator  (DEGREES)
+;                               positive means a neutral line that moves northward
+;                               with increasing longitude
+;                               (for parallel to equator set to zero)
+;                               DEFAULT 0 DEGREES
+;
+;               *PHOTOLENGTH - streamer gaussian half length X 2 at photosphere (DEGREES)
+;                               DEFAULT 100 DEGREES
+;
+;               *PHOTOWIDTH - streamer gaussian half width X 2 at photosphere (DEGREES)
+;                               DEFAULT 40 DEGREES
+;
+;               *CSWIDTH  - streamer gaussian half width X 2 at streamer top (DEGREES)
+;                               DEFAULT 3 DEGREES
+;
+;               *CSHEIGHT - streamer current sheet height (RSUN)
+;                               DEFAULT 2.5 RSUN
+;
+;               *ALPHA - streamer non-radiality (DEGREES)
+;                               DEFAULT 0 DEGREES
+;                               If set to 999, will take whatever value cavity GAMMA has
+;
+;               NOFMAX -- this turns off the "sinking mountain" effect done to avoid discontinuities at the
+;                               poles. Good for testing sensitivity to this effect (which arises due to long
+;                               streamers with big mang. DEFAULT 1 (so discontinuities possible)
+;
+;
+;       MORPHOLOGY CAVITY
+;
+;               **CAVTOP_R,TH -
+;                               in EGGS program, this is the height (in solar radii)
+;                               and POLAR ANGLE (in degrees) of the point
+;                               at the top of the ellipse axis closest to radial (not necessarily semi-major)
+;                               DEFINED AT CENTER OF STREAMER GAUSSIAN
+;                               DEFAULT R=1.2 RSUN
+;                               DEFAULT TH=THCS
+;
+;               **CAVLENGTH  -  TOTAL length of cavity (DEGREES)
+;                               MUST be smaller than PHOTOLENGTH
+;                               DEFAULT 50 DEGREES
+;
+;               **CAVWIDTH  -   width of cavity (RSUN)
+;                               in EGGS program, this is the width (in solar radii)
+;                               of the ellipse axis closest to normal to radial (not necessarily semi-minor)
+;                               DEFINED AT CENTER OF STREAMER GAUSSIAN
+;                               DEFAULT 0.25 RSUN
+;
+;               **CAVHEIGHT  -   height of cavity (RSUN)
+;                               in EGGS program, this is the height (in solar radii)
+;                               of the ellipse axis closest to radial (not necessarily semi-major)
+;                               DEFINED AT CENTER OF STREAMER GAUSSIAN
+;                               DEFAULT 0.25 RSUN
+;
+;               DEPBASE, DEPSLOPE1, DEPSLOPE2, RDEPMID -
+;                               density depletion radial profile for cavity
+;                               DEPBASE is depletion at photosphere
+;                                       DEFAULT 0.5
+;                               DEPSLOPE1 is slope of depletion to RDEPMID point (can be positive or negative)
+;                                       DEFAULT 0.0
+;                               DEPSLOPE1 is slope of depletion above RDEPMID (can be positive or negative)
+;                                       DEFAULT 0.0
+;                               RDEPMID is point of inflection for profile
+;                                       DEFAULT 1.0
+;                               NOTE if abs(DEPBASE) set > 1, CAVSCALES are used to set cavity radial profile
+;					these will either be an enhancement (if DEPBASE > 1) or 
+;					(if DEPBASE < 1) allow user-inputted values for CAVSCALES 
+;						(see CAVSCALES below)
+;
+;               TUNNEL - if set assume cavity is a long tunnel with constant height and width.
+;               TUNSLOPE - slope for the Tunnel height, so that it is linear in phi
+;                                       rather than constant.
+;
+;       MORPHOLOGY NOUGAT
+;
+;               **NOUGAT - keyword indicating a nougat will be embedded
+;                               DEFAULT 0
+;
+;               **NOUGMULT - multiply by cavity density to get nougat density
+;                               DEFAULT 1
+;                               If set to less than zero, nougat density defined by NOUGSCALES
+;
+;               **NOUGTHCS,NOUGPHCS - Nougat central limb-intersecting colatitude, longitude (DEGREES)
+;                               NOUGTHCS defined in EGGS program as intersection
+;                               of ellipse axis closest to radial (not necessarily semi-major axis)
+;                               with limb.
+;                               DEFAULT THCS, 0
+;
+;               **NOUGTOP_R,TH -
+;                               in EGGS program, this is the height (in solar radii)
+;                               and POLAR ANGLE (in degrees) of the point
+;                               at the top of the ellipse axis closest to radial (not necessarily semi-major)
+;                               DEFINED AT CENTER OF STREAMER GAUSSIAN
+;                               DEFAULT R=0.75*CAVTOP_R
+;                               DEFAULT TH=CAVTOP_TH
+;
+;               **NOUG_MANG -- Nougat slope
+;                               DEFAULT MANG
+;
+;               **NOUGLENGTH  -  TOTAL length of nougat (DEGREES)
+;                               CANT BE BIGGER than CAVLENGTH
+;                               DEFAULT cavlength/2
+;
+;               **NOUGWIDTH  -   width of nougat (RSUN)
+;                               in EGGS program, this is the width (in solar radii)
+;                               of the ellipse axis closest to normal to radial (not necessarily semi-minor)
+;                               DEFINED AT CENTER OF STREAMER GAUSSIAN
+;                               DEFAULT half cavwidth
+;                               MUST be smaller than CAVWIDTH
+;
+;               **NOUGHEIGHT  -   height of nougat (RSUN)
+;                               in EGGS program, this is the height (in solar radii)
+;                               of the ellipse axis closest to radial (not necessarily semi-major)
+;                               DEFINED AT CENTER OF STREAMER GAUSSIAN
+;                               DEFAULT half cavheight
+;                               MUST be smaller than CAVHEIGHT
+;
+;               **ZITIPRAM -- makes nougat hollow, value of ZITIPRAM
+;                       is fraction of radius of hollow tube wall
+;                       DEFAULT 0
+;
+;       TEMPERATURE
+;
+;               TCAV - Cavity temperature, DEFAULT 1.6d6
+;                       NOTE if TCAV=0 or TRIM=0 or TNOUG=0,
+;                       use hydrostatic scale-height (based on density radial falloff)
+;                       NOTE this requires USEMOD=POWER-- if not set, defaults will take over
+;
+;               TRIM - Rim temperature, DEFAULT 1.6d6
+;                       NOTE if TCAV=0 or TRIM=0 or TNOUG=0,
+;                       use hydrostatic scale-height (based on density radial falloff)
+;                       NOTE this requires USEMOD=POWER-- if not set, defaults will take over
+;
+;               TNOUG - Nougat temperature, DEFAULT 1.6d6
+;                       NOTE if TCAV=0 or TRIM=0 or TNOUG=0,
+;                       use hydrostatic scale-height (based on density radial falloff)
+;                       NOTE this requires USEMOD=POWER-- if not set, defaults will take over
+;
+;               TRGAM - Rim gamma, DEFAULT 1. (isothermal)
+;
+;               TCGAM - Cavity gamma, DEFAULT 1. (isothermal)
+;
+;               TNGAM - Nougat gamma, DEFAULT 1. (isothermal)
+;
+;               TCPar - Cavity Temperature Parameter Array  (listed at end of parameters in widget)
+;                       if non-zero, will allow freely varying temperature function or 1-8 elements
+;
+;               TRPar - Rim Temperature Parameter Array  (listed at end of parameters in widget)
+;                       if non-zero, will allow freely varying temperature function or 1-8 elements
+;
+;               TMod - tempeature Model. Default a Power law.
+;                       choices POLY POWER POW1 (see CAVMORPH.PRO)
+;                       only used if TCPar or TRPar used
+;
+;       DENSITY
+;               DENSSCAL - scaling factor times radial profile of streamer and c. hole density
+;                               default SPARTAN and WSM values, for varying model for use
+;                               in different parts of solar cycle
+;                               DEFAULT 1.
+;
+;               USEMOD - coronal hole/streamer radial density model to use
+;                               EXPONENT - based on Gibson et al., 2003) model, but with streamer
+;                                profile determined independent of coronal hole profile
+;                               EXPDEL - as in multistreamer Gibson et al., 2003) model, SPARTAN fit default
+;                                here the streamer coefficients refer to a delta above the coronal hole fit
+;                               or POWER (Guhathakurta et al., 1999; Gibson et al., 1999 - WSM fits)
+;                               DEFAULT POWER
+;
+;               STREAMSCALES,HOLESCALES,CAVSCALES,NOUGSCALES --  (listed at end of parameters in widget)
+;                       these are 6-D arrays of radial profile parameters streamer and hole
+;                       used either in EXPONENT or POWER function-- if not set, default to
+;                       SPARTAN and WSM value respectively
+;                       IF POWER-- will be multipled by 1d5 (coronal hole), and 1d8 (streamer)
+;                       CAVSCALES used only if ABS(DEPBASE) (see below) is set to greater than one
+;                               DEFAULT then is streamer scaled to DEPBASE (and this is forced for positive DEPBASE)
+;                       NOUGSCALES used only if NOUGMULT (see below) is set to less than zero
+;                               DEFAULT then is CAVSCALES
+;
+;       Filling Factor
+;
+;               FFPAR - parameters for filling factor. If not present FF=1
+;                       If present, Population 1 filling factor set to it
+;                       If FF=1, and Pop2FillFact set via CFF_*SCALES below, set to 1-Pop2FillFact
+;                       Can also be set (line command only) to 2 or 3 element array, see CAVMORPH.PRO
+;
+;     Second Population: Chromospheric - forces Pop2TRegime=2 at top level
+;
+;               CDENS -  electron density for cool (chromospheric temp) material (Lyman absorbing). Default=0
+;                       For cool particles (neutral H, neutral and +1 He) used for Lyman continuum absorption calculation
+;
+;               CFF_STREAMSCALES - filling factor for cool material (Pop2) in streamer (listed at end of parameters in widget)
+;               CFF_CAVSCALES - filling factor for cool material (Pop2) in cavity (listed at end of parameters in widget)
+;               CFF_NOUGSCALES - filling factor of  cool material (Pop2) in nougat (listed at end of parameters in widget)
+;
+;      Second Population: Coronal - forces Pop2TRegime=1 at top level
+;
+;               POP2HOLE
+;                       if set, coronal hole is treated as population 2, allowing different abundance setting
+;               POP2CAV
+;                       if set, cavity is treated as population 2, allowing different abundance setting
+;               POP2NOUG
+;                       if set, nougat is treated as population 2, allowing different abundance setting
+;
+
