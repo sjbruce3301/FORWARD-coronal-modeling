@@ -19,10 +19,10 @@ function linear_mapping, v_in, new_data_min, new_data_max
   d = new_data_max
   v_out = ((c+d) + (d-c)*((2*v_in - (a+b))/(b-a)))/2;
   
-  print,a
-  print,b
-  print,MIN(v_out)
-  print,MAX(v_out)
+  ;print,a
+  ;print,b
+  ;print,MIN(v_out)
+  ;print,MAX(v_out)
   
   return, v_out
 end
