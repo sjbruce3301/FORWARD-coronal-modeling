@@ -1,0 +1,125 @@
+function for_cram_sim, lamdaobs, rho, te, filename
+
+  e = 2.718282
+  c = 300000    ; speed of light (km/s)
+  solradii = 6.9599 * 10.^10. ; solar radius (cm)
+  au = 1.495979 * 10.^13. ; earth-sun distance (cm)
+  irradtoflux = (au/solradii)^2/!pi ; irradiance to flux conversion
+  sunang = 6.8*10.^(-5) ; steradians covered by sun
+  cmpersr = !pi*solradii^2/sunang ; centimeters per steradian
+  crossec = 0.6677 * 10.^(-24.) ; Thomson scattering cross-section (cm^2)
+  factoredout = 1/2./sqrt(!pi)*3/16/!pi*crossec ; constants factored out
+
+  n_obs = n_elements(lamdaobs)
+  n_rho = n_elements(rho)
+  n_te = n_elements(te)
+  intot_arr = fltarr(n_obs, n_rho, n_te)
+  intor_arr = fltarr(n_obs, n_rho, n_te)
+  polp_arr = fltarr(n_obs, n_rho, n_te)
+
+  restore, filename ; Load irradiance spectrum file
+  irtot = irtotnl
+  lamdasrc = reform(irtot(0, *))
+  izero = reform(irtot(1, *)) * irradtoflux
+
+  lam = [30, 32, 35, 37, 38, 40, 45, 50, 55, 60, 80, 100, 150] * 100
+  u2 = [.74, .88, .98, 1.03, .92, .91, .99, .97, .93, .88, .73, .64, .57]
+  v2 = [.20, .03, -.1, -.16, -.05, -.05, -.17, -.22, -.23, -.23, -.22, -.20, -.21]
+  u2r = spline(lam, u2, lamdasrc, 1)
+  v2r = spline(lam, v2, lamdasrc, 1)
+
+  ; Outer loop over observed wavelengths
+  for i = 0, n_obs - 1 do begin
+    lamdaobs_val = lamdaobs[i]
+
+    ; Loop over radial distances (rho)
+    for j = 0, n_rho - 1 do begin
+      rho_val = rho[j]
+
+      ; Loop over temperatures (te)
+      for k = 0, n_te - 1 do begin
+        te_val = te[k]
+        qp = 5508. * sqrt(te_val)
+
+        ; Trim wavelength range
+        ldif = lamdaobs_val * qp / c * 4.0
+        lamdamin = lamdaobs_val - ldif
+        lamdamax = lamdaobs_val + ldif
+        lambeg = for_get_closest(lamdasrc, lamdamin)
+        lamend = for_get_closest(lamdasrc, lamdamax)
+        lamdasrcc = lamdasrc(lambeg:lamend)
+        izeroc = izero(lambeg:lamend)
+        delamda = mean(abs(diff(lamdasrc)))
+        dellam = lamdaobs_val - lamdasrcc
+        delt = lamdasrcc / c * qp
+        u2rc = u2r(lambeg:lamend)
+        v2rc = v2r(lambeg:lamend)
+        foi = 1 - u2rc / 3. - v2rc / 2.
+
+        ; Define variables in integration
+        minx = -7.0
+        maxx = 7.0
+        xstep = 0.5
+        maxr = fix(sqrt(maxx^2 + rho_val^2))
+        xs = findgen(maxr * 20 + 1.) / 20. + 1.003
+        allhgt = [1.003, 1.005, 1.01, 1.03, 1.06, 1.1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.5, 3.0, 4.0, 5.0, 10.0]
+        allne = 10^[9.0, 8.7, 8.4, 8.25, 8.10, 7.96, 7.67, 7.18, 6.83, 6.56, 6.31, 6.10, 5.81, 5.45, 4.97, 4.7, 4.0]
+        alled = spline(allhgt, allne, xs, 9)
+        xstepcm = xstep * solradii
+        inttot = 0.
+        introt = 0.
+
+        ; Integration along line of sight (x)
+        for x = minx, maxx, xstep do begin
+          r = sqrt(x^2 + rho_val^2)
+          dnum = get_closest(xs, r)
+          elecden = alled(dnum)
+          totalelecs = elecden * xstepcm
+          maxomega = asin(1 / r)
+          omegstep = (maxomega - 0.) / 50 > 1
+
+          ; Omega integration
+          intro = 0. & intto = 0.
+          for omeg = 0., maxomega, omegstep do begin
+            theta = asin(r * sin(omeg))
+            mu = cos(theta)
+            iodc = 1 - u2rc - v2rc + u2rc * mu + v2rc * mu^2
+            qfac = iodc / foi
+            izerocor = izeroc * qfac
+
+            ; Phi integration
+            intr = 0. & intt = 0.
+            for phi = 0., !pi, 0.08 do begin
+              scatang = !pi - acos(cos(omeg) * (x / r) + sin(omeg) * sin(acos(x / r)) * sin(phi))
+              alpha = asin((sin(phi) * sin(omeg) / sin(!pi - scatang)) < 1.0)
+              gamma = scatang / 2
+              qrad = cos(alpha)^2 * cos(scatang)^2 + sin(alpha)^2
+              qtan = cos(alpha)^2 + sin(alpha)^2 * cos(scatang)^2
+              expon = -((dellam / (2 * delt * cos(gamma)))^2 > -80)
+              dist = (e^expon) / (delt * cos(gamma))
+              intcont = dist * izerocor
+              intint = total(intcont) * delamda
+
+              intr += qrad * intint
+              intt += qtan * intint
+            endfor
+
+            intro += intr * sin(omeg)
+            intto += intt * sin(omeg)
+          endfor
+
+          inttot += intto * totalelecs * omegstep
+          introt += intro * totalelecs * omegstep
+        endfor
+
+        ; Store results for this combination of lamdaobs, rho, te
+        intot_arr[i, j, k] = inttot * 2 * 0.08 * factoredout
+        intor_arr[i, j, k] = introt * 2 * 0.08 * factoredout
+        polp_arr[i, j, k] = (intot_arr[i, j, k] - intor_arr[i, j, k]) / (intot_arr[i, j, k] + intor_arr[i, j, k])
+
+      endfor ;te
+    endfor ;rho
+  endfor ;lamdaobs
+
+  return, intot_arr
+end
