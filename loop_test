@@ -1,4 +1,8 @@
-function for_cram_sim, lamdaobs, rho, te, filename
+function loop_test, lamdaobs, rho, te, filename
+
+;loop partially outside the function and part of the inside. loop LOS outside and then 10000 inside
+; take foward , run it to calculate polarized brightness, but then have it stop or break before goes to pbbcalc, save the 10,000 into sav file and load it in.
+; then input it into my file. 
 
   e = 2.718282
   c = 300000    ; speed of light (km/s)
@@ -28,7 +32,7 @@ function for_cram_sim, lamdaobs, rho, te, filename
   u2r = spline(lam, u2, lamdasrc, 1)
   v2r = spline(lam, v2, lamdasrc, 1)
 
-  ; Outer loop over observed wavelengths
+  ; Outer loop over wavelengths
   for i = 0, n_obs - 1 do begin
     lamdaobs_val = lamdaobs[i]
 
